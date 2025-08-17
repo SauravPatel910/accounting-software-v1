@@ -113,6 +113,133 @@ interface CompanyInfo {
   logo?: string;
 }
 
+// Vendor Management Types
+interface Vendor {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone?: string;
+  address: string;
+  city: string;
+  state?: string;
+  zipCode?: string;
+  country: string;
+  taxId?: string;
+  paymentTerms?: string;
+  category?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CreateVendorData {
+  name: string;
+  company: string;
+  email: string;
+  phone?: string;
+  address: string;
+  city: string;
+  state?: string;
+  zipCode?: string;
+  country: string;
+  taxId?: string;
+  paymentTerms?: string;
+  category?: string;
+  notes?: string;
+}
+
+// Bill Management Types
+interface BillItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  category?: string;
+}
+
+interface Bill {
+  id: string;
+  billNumber: string;
+  vendorId: string;
+  vendor?: Vendor;
+  billDate: Date;
+  dueDate: Date;
+  description: string;
+  notes?: string;
+  status: "draft" | "pending" | "paid" | "overdue" | "cancelled";
+  items: BillItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  paidAmount?: number;
+  paymentDate?: Date;
+  referenceNumber?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CreateBillData {
+  vendorId: string;
+  billDate: Date;
+  dueDate: Date;
+  description: string;
+  notes?: string;
+  items: Omit<BillItem, "id">[];
+  taxRate: number;
+  referenceNumber?: string;
+}
+
+// Direct Expense Types
+interface Expense {
+  id: string;
+  expenseNumber: string;
+  vendorId?: string;
+  vendor?: Vendor;
+  date: Date;
+  category: string;
+  description: string;
+  amount: number;
+  taxAmount: number;
+  total: number;
+  paymentMethod: "cash" | "card" | "check" | "bank_transfer" | "other";
+  receiptUrl?: string;
+  notes?: string;
+  status: "draft" | "submitted" | "approved" | "reimbursed";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CreateExpenseData {
+  vendorId?: string;
+  date: Date;
+  category: string;
+  description: string;
+  amount: number;
+  taxAmount: number;
+  paymentMethod: Expense["paymentMethod"];
+  receiptUrl?: string;
+  notes?: string;
+}
+
+// Expense Categories
+interface ExpenseCategory {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CreateExpenseCategoryData {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
 // Base API class
 class ApiClient {
   private baseUrl: string;
@@ -125,12 +252,20 @@ class ApiClient {
     const url = `${this.baseUrl}${endpoint}`;
 
     const config: RequestInit = {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
       ...options,
     };
+
+    // Set headers, but not for FormData
+    if (!(options.body instanceof FormData)) {
+      config.headers = {
+        "Content-Type": "application/json",
+        ...options.headers,
+      };
+    } else {
+      config.headers = {
+        ...options.headers,
+      };
+    }
 
     // Add auth token if available
     const token = localStorage.getItem("auth-token");
@@ -160,16 +295,36 @@ class ApiClient {
     return this.request<T>(endpoint, { method: "GET" });
   }
 
-  async post<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, data: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
+    // Handle FormData specially
+    if (data instanceof FormData) {
+      return this.request<T>(endpoint, {
+        method: "POST",
+        body: data,
+        headers: {
+          // Don't set Content-Type for FormData, let browser set it
+          ...(options?.headers || {}),
+        },
+      });
+    }
+
     return this.request<T>(endpoint, {
       method: "POST",
       body: JSON.stringify(data),
+      ...options,
     });
   }
 
   async put<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async patch<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: "PATCH",
       body: JSON.stringify(data),
     });
   }
@@ -379,6 +534,198 @@ export const settingsApi = {
   },
 };
 
+// Vendor API
+export const vendorApi = {
+  // Get all vendors
+  getAll: async (): Promise<Vendor[]> => {
+    const response = await apiClient.get<Vendor[]>("/vendors");
+    return response.data;
+  },
+
+  // Get vendor by ID
+  getById: async (id: string): Promise<Vendor> => {
+    const response = await apiClient.get<Vendor>(`/vendors/${id}`);
+    return response.data;
+  },
+
+  // Create new vendor
+  create: async (data: CreateVendorData): Promise<Vendor> => {
+    const response = await apiClient.post<Vendor>("/vendors", data);
+    return response.data;
+  },
+
+  // Update vendor
+  update: async (id: string, data: Partial<CreateVendorData>): Promise<Vendor> => {
+    const response = await apiClient.put<Vendor>(`/vendors/${id}`, data);
+    return response.data;
+  },
+
+  // Delete vendor
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/vendors/${id}`);
+  },
+
+  // Search vendors
+  search: async (query: string): Promise<Vendor[]> => {
+    const response = await apiClient.get<Vendor[]>(
+      `/vendors/search?q=${encodeURIComponent(query)}`
+    );
+    return response.data;
+  },
+};
+
+// Bill API
+export const billApi = {
+  // Get all bills
+  getAll: async (): Promise<Bill[]> => {
+    const response = await apiClient.get<Bill[]>("/bills");
+    return response.data;
+  },
+
+  // Get bill by ID
+  getById: async (id: string): Promise<Bill> => {
+    const response = await apiClient.get<Bill>(`/bills/${id}`);
+    return response.data;
+  },
+
+  // Create new bill
+  create: async (data: CreateBillData): Promise<Bill> => {
+    const response = await apiClient.post<Bill>("/bills", data);
+    return response.data;
+  },
+
+  // Update bill
+  update: async (id: string, data: Partial<CreateBillData>): Promise<Bill> => {
+    const response = await apiClient.put<Bill>(`/bills/${id}`, data);
+    return response.data;
+  },
+
+  // Delete bill
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/bills/${id}`);
+  },
+
+  // Update bill status
+  updateStatus: async (id: string, status: Bill["status"]): Promise<Bill> => {
+    const response = await apiClient.patch<Bill>(`/bills/${id}/status`, { status });
+    return response.data;
+  },
+
+  // Mark bill as paid
+  markAsPaid: async (id: string, paidAmount: number, paymentDate: Date): Promise<Bill> => {
+    const response = await apiClient.patch<Bill>(`/bills/${id}/payment`, {
+      paidAmount,
+      paymentDate,
+      status: "paid",
+    });
+    return response.data;
+  },
+
+  // Get bills by vendor
+  getByVendor: async (vendorId: string): Promise<Bill[]> => {
+    const response = await apiClient.get<Bill[]>(`/bills/vendor/${vendorId}`);
+    return response.data;
+  },
+};
+
+// Expense API
+export const expenseApi = {
+  // Get all expenses
+  getAll: async (): Promise<Expense[]> => {
+    const response = await apiClient.get<Expense[]>("/expenses");
+    return response.data;
+  },
+
+  // Get expense by ID
+  getById: async (id: string): Promise<Expense> => {
+    const response = await apiClient.get<Expense>(`/expenses/${id}`);
+    return response.data;
+  },
+
+  // Create new expense
+  create: async (data: CreateExpenseData): Promise<Expense> => {
+    const response = await apiClient.post<Expense>("/expenses", data);
+    return response.data;
+  },
+
+  // Update expense
+  update: async (id: string, data: Partial<CreateExpenseData>): Promise<Expense> => {
+    const response = await apiClient.put<Expense>(`/expenses/${id}`, data);
+    return response.data;
+  },
+
+  // Delete expense
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/expenses/${id}`);
+  },
+
+  // Update expense status
+  updateStatus: async (id: string, status: Expense["status"]): Promise<Expense> => {
+    const response = await apiClient.patch<Expense>(`/expenses/${id}/status`, { status });
+    return response.data;
+  },
+
+  // Get expenses by category
+  getByCategory: async (category: string): Promise<Expense[]> => {
+    const response = await apiClient.get<Expense[]>(
+      `/expenses/category/${encodeURIComponent(category)}`
+    );
+    return response.data;
+  },
+
+  // Get expenses by vendor
+  getByVendor: async (vendorId: string): Promise<Expense[]> => {
+    const response = await apiClient.get<Expense[]>(`/expenses/vendor/${vendorId}`);
+    return response.data;
+  },
+
+  // Upload receipt
+  uploadReceipt: async (expenseId: string, file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("receipt", file);
+
+    const response = await apiClient.post<{ url: string }>(
+      `/expenses/${expenseId}/receipt`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data.url;
+  },
+};
+
+// Expense Category API
+export const expenseCategoryApi = {
+  // Get all categories
+  getAll: async (): Promise<ExpenseCategory[]> => {
+    const response = await apiClient.get<ExpenseCategory[]>("/expense-categories");
+    return response.data;
+  },
+
+  // Create new category
+  create: async (data: CreateExpenseCategoryData): Promise<ExpenseCategory> => {
+    const response = await apiClient.post<ExpenseCategory>("/expense-categories", data);
+    return response.data;
+  },
+
+  // Update category
+  update: async (
+    id: string,
+    data: Partial<CreateExpenseCategoryData>
+  ): Promise<ExpenseCategory> => {
+    const response = await apiClient.put<ExpenseCategory>(`/expense-categories/${id}`, data);
+    return response.data;
+  },
+
+  // Delete category
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/expense-categories/${id}`);
+  },
+};
+
 // Export types for use in components
 export type {
   Customer,
@@ -387,6 +734,15 @@ export type {
   CreateCustomerData,
   CreateInvoiceData,
   EmailInvoiceData,
+  Vendor,
+  CreateVendorData,
+  Bill,
+  BillItem,
+  CreateBillData,
+  Expense,
+  CreateExpenseData,
+  ExpenseCategory,
+  CreateExpenseCategoryData,
   ApiResponse,
   User,
   AuthResponse,
