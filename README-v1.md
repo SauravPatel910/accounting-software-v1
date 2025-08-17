@@ -355,7 +355,7 @@ npm install @mantine/notifications @mantine/modals @mantine/datatables
 npm install react-hook-form @hookform/resolvers zod
 npm install @tanstack/react-query @tanstack/react-query-devtools
 npm install decimal.js currency.js date-fns
-npm install react-router-dom
+npm install react-router
 npm install @supabase/supabase-js @supabase/auth-helpers-react
 npm install apexcharts react-apexcharts
 npm install motion
