@@ -1,20 +1,39 @@
 import { BrowserRouter, Routes, Route } from "react-router";
+import { MantineProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+import { AppLayout } from "./components/layout";
+import { Dashboard, Invoices, Transactions, Customers, Accounts, Reports, Settings } from "./pages";
+
+// Import Mantine styles
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<div>Home</div>}>
-          {/* Future routes */}
-          <Route index element={<div>Home Page</div>} />
-          <Route path="invoices" element={<div>Invoices - Coming Soon</div>} />
-          <Route path="transactions" element={<div>Transactions - Coming Soon</div>} />
-          <Route path="reports" element={<div>Reports - Coming Soon</div>} />
-          <Route path="customers" element={<div>Customers - Coming Soon</div>} />
-          <Route path="settings" element={<div>Settings - Coming Soon</div>} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <MantineProvider defaultColorScheme="light">
+      <Notifications />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="invoices/create" element={<Invoices />} />
+            <Route path="invoices/recurring" element={<Invoices />} />
+            <Route path="transactions" element={<Transactions />} />
+            <Route path="transactions/accounts" element={<Transactions />} />
+            <Route path="transactions/reconcile" element={<Transactions />} />
+            <Route path="customers" element={<Customers />} />
+            <Route path="accounts" element={<Accounts />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="reports/profit-loss" element={<Reports />} />
+            <Route path="reports/balance-sheet" element={<Reports />} />
+            <Route path="reports/cash-flow" element={<Reports />} />
+            <Route path="reports/tax" element={<Reports />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </MantineProvider>
   );
 }
 
