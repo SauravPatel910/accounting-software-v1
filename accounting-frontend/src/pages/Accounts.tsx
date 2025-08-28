@@ -1,5 +1,6 @@
-import { Box, Text, Card, SimpleGrid, Button, Group } from "@mantine/core";
-import { IconCalculator, IconPlus, IconList } from "@tabler/icons-react";
+import { Box, Text, Card, SimpleGrid, Button, Group, Tabs } from "@mantine/core";
+import { IconCalculator, IconPlus, IconList, IconBuildingBank } from "@tabler/icons-react";
+import { BankAccountList } from "../components/banking";
 
 export function Accounts() {
   return (
@@ -16,52 +17,121 @@ export function Accounts() {
         <Button leftSection={<IconPlus size={16} />}>Add Account</Button>
       </Group>
 
-      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-        <Card shadow="xs" padding="lg" radius="md" withBorder>
-          <Group gap="sm" mb="md">
-            <IconList size={20} color="var(--mantine-color-blue-6)" />
-            <Text size="lg" fw={600}>
-              All Accounts
-            </Text>
-          </Group>
-          <Text size="sm" c="dimmed" mb="md">
-            View and manage your complete chart of accounts
-          </Text>
-          <Button variant="light" fullWidth>
-            Coming Soon
-          </Button>
-        </Card>
+      <Tabs defaultValue="bank-accounts">
+        <Tabs.List>
+          <Tabs.Tab value="bank-accounts" leftSection={<IconBuildingBank size={16} />}>
+            Bank Accounts
+          </Tabs.Tab>
+          <Tabs.Tab value="chart-accounts" leftSection={<IconList size={16} />}>
+            Chart of Accounts
+          </Tabs.Tab>
+          <Tabs.Tab value="account-types" leftSection={<IconCalculator size={16} />}>
+            Account Types
+          </Tabs.Tab>
+        </Tabs.List>
 
-        <Card shadow="xs" padding="lg" radius="md" withBorder>
-          <Group gap="sm" mb="md">
-            <IconPlus size={20} color="var(--mantine-color-green-6)" />
-            <Text size="lg" fw={600}>
-              Add Account
-            </Text>
-          </Group>
-          <Text size="sm" c="dimmed" mb="md">
-            Create new accounts for your business structure
-          </Text>
-          <Button variant="light" fullWidth>
-            Coming Soon
-          </Button>
-        </Card>
+        <Tabs.Panel value="bank-accounts" pt="xl">
+          <BankAccountList />
+        </Tabs.Panel>
 
-        <Card shadow="xs" padding="lg" radius="md" withBorder>
-          <Group gap="sm" mb="md">
-            <IconCalculator size={20} color="var(--mantine-color-orange-6)" />
-            <Text size="lg" fw={600}>
-              Account Types
-            </Text>
-          </Group>
-          <Text size="sm" c="dimmed" mb="md">
-            Manage account categories and classifications
-          </Text>
-          <Button variant="light" fullWidth>
-            Coming Soon
-          </Button>
-        </Card>
-      </SimpleGrid>
+        <Tabs.Panel value="chart-accounts" pt="xl">
+          <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
+            <Card shadow="xs" padding="lg" radius="md" withBorder>
+              <Group gap="sm" mb="md">
+                <IconList size={20} color="var(--mantine-color-blue-6)" />
+                <Text size="lg" fw={600}>
+                  All Accounts
+                </Text>
+              </Group>
+              <Text size="sm" c="dimmed" mb="md">
+                View and manage your complete chart of accounts
+              </Text>
+              <Button variant="light" fullWidth>
+                Coming Soon
+              </Button>
+            </Card>
+
+            <Card shadow="xs" padding="lg" radius="md" withBorder>
+              <Group gap="sm" mb="md">
+                <IconPlus size={20} color="var(--mantine-color-green-6)" />
+                <Text size="lg" fw={600}>
+                  Add Account
+                </Text>
+              </Group>
+              <Text size="sm" c="dimmed" mb="md">
+                Create new accounts for your business structure
+              </Text>
+              <Button variant="light" fullWidth>
+                Coming Soon
+              </Button>
+            </Card>
+
+            <Card shadow="xs" padding="lg" radius="md" withBorder>
+              <Group gap="sm" mb="md">
+                <IconCalculator size={20} color="var(--mantine-color-orange-6)" />
+                <Text size="lg" fw={600}>
+                  Account Categories
+                </Text>
+              </Group>
+              <Text size="sm" c="dimmed" mb="md">
+                Manage account categories and classifications
+              </Text>
+              <Button variant="light" fullWidth>
+                Coming Soon
+              </Button>
+            </Card>
+          </SimpleGrid>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="account-types" pt="xl">
+          <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
+            <Card shadow="xs" padding="lg" radius="md" withBorder>
+              <Group gap="sm" mb="md">
+                <IconCalculator size={20} color="var(--mantine-color-orange-6)" />
+                <Text size="lg" fw={600}>
+                  Asset Accounts
+                </Text>
+              </Group>
+              <Text size="sm" c="dimmed" mb="md">
+                Cash, inventory, equipment, and other assets
+              </Text>
+              <Button variant="light" fullWidth>
+                Coming Soon
+              </Button>
+            </Card>
+
+            <Card shadow="xs" padding="lg" radius="md" withBorder>
+              <Group gap="sm" mb="md">
+                <IconCalculator size={20} color="var(--mantine-color-red-6)" />
+                <Text size="lg" fw={600}>
+                  Liability Accounts
+                </Text>
+              </Group>
+              <Text size="sm" c="dimmed" mb="md">
+                Accounts payable, loans, and other liabilities
+              </Text>
+              <Button variant="light" fullWidth>
+                Coming Soon
+              </Button>
+            </Card>
+
+            <Card shadow="xs" padding="lg" radius="md" withBorder>
+              <Group gap="sm" mb="md">
+                <IconCalculator size={20} color="var(--mantine-color-blue-6)" />
+                <Text size="lg" fw={600}>
+                  Equity Accounts
+                </Text>
+              </Group>
+              <Text size="sm" c="dimmed" mb="md">
+                Owner's equity, retained earnings, and capital
+              </Text>
+              <Button variant="light" fullWidth>
+                Coming Soon
+              </Button>
+            </Card>
+          </SimpleGrid>
+        </Tabs.Panel>
+      </Tabs>
     </Box>
   );
 }
