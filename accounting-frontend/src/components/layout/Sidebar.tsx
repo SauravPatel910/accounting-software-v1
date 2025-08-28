@@ -4,6 +4,38 @@ import { NavLink, useLocation } from "react-router";
 import { Box, Group, ScrollArea, Text, UnstyledButton, rem, useMantineTheme, Collapse } from "@mantine/core";
 // prettier-ignore
 import { IconDashboard, IconFileInvoice, IconCreditCard, IconUsers, IconReport, IconSettings, IconChevronRight, IconCoins, IconCalculator, IconPackage, IconTestPipe, IconReceipt } from "@tabler/icons-react";
+import { motion } from "motion/react";
+import type { Variants } from "motion/react";
+
+// Animation variants for navigation items
+const navContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const navItemVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    x: -20,
+    scale: 0.95,
+  },
+  visible: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 400,
+      damping: 25,
+    },
+  },
+};
 
 const mainNavigation = [
   {
@@ -128,36 +160,44 @@ function NavItem({ icon: Icon, label, link, color, subItems, active, onClick }: 
   };
 
   return (
-    <Box>
+    <motion.div
+      variants={navItemVariants}
+      whileHover={{
+        scale: 1.02,
+        x: 4,
+        transition: { duration: 0.2 },
+      }}
+      whileTap={{ scale: 0.98 }}>
       {hasSubItems ? (
         <UnstyledButton onClick={handleClick} style={buttonStyle}>
           <Group gap="sm" wrap="nowrap">
-            <Icon
-              size={20}
-              stroke={1.5}
-              color={shouldHighlight ? theme.colors[color][6] : undefined}
-            />
+            <motion.div whileHover={{ rotate: 5, scale: 1.1 }} transition={{ duration: 0.2 }}>
+              <Icon
+                size={20}
+                stroke={1.5}
+                color={shouldHighlight ? theme.colors[color][6] : undefined}
+              />
+            </motion.div>
             <Text size="sm" style={{ flex: 1 }}>
               {label}
             </Text>
-            <IconChevronRight
-              size={16}
-              style={{
-                transform: opened ? "rotate(90deg)" : "rotate(0deg)",
-                transition: "transform 200ms ease",
-              }}
-              stroke={1.5}
-            />
+            <motion.div
+              animate={{ rotate: opened ? 90 : 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}>
+              <IconChevronRight size={16} stroke={1.5} />
+            </motion.div>
           </Group>
         </UnstyledButton>
       ) : (
         <UnstyledButton component={NavLink} to={link} style={buttonStyle}>
           <Group gap="sm" wrap="nowrap">
-            <Icon
-              size={20}
-              stroke={1.5}
-              color={shouldHighlight ? theme.colors[color][6] : undefined}
-            />
+            <motion.div whileHover={{ rotate: 5, scale: 1.1 }} transition={{ duration: 0.2 }}>
+              <Icon
+                size={20}
+                stroke={1.5}
+                color={shouldHighlight ? theme.colors[color][6] : undefined}
+              />
+            </motion.div>
             <Text size="sm" style={{ flex: 1 }}>
               {label}
             </Text>
@@ -167,32 +207,45 @@ function NavItem({ icon: Icon, label, link, color, subItems, active, onClick }: 
 
       {hasSubItems && (
         <Collapse in={opened}>
-          <Box pl="xl" pt="xs">
-            {subItems.map((item) => (
-              <UnstyledButton
-                key={item.link}
-                component={NavLink}
-                to={item.link}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
-                  borderRadius: theme.radius.sm,
-                  color:
-                    location.pathname === item.link ? theme.colors[color][6] : theme.colors.gray[6],
-                  backgroundColor:
-                    location.pathname === item.link ? theme.colors[color][0] : "transparent",
-                  textDecoration: "none",
-                  fontSize: theme.fontSizes.sm,
-                  border: "none",
-                }}>
-                <Text size="xs">{item.label}</Text>
-              </UnstyledButton>
-            ))}
-          </Box>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}>
+            <Box pl="xl" pt="xs">
+              {subItems.map((item, index) => (
+                <motion.div
+                  key={item.link}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.2 }}
+                  whileHover={{ x: 4, scale: 1.01 }}>
+                  <UnstyledButton
+                    component={NavLink}
+                    to={item.link}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
+                      borderRadius: theme.radius.sm,
+                      color:
+                        location.pathname === item.link
+                          ? theme.colors[color][6]
+                          : theme.colors.gray[6],
+                      backgroundColor:
+                        location.pathname === item.link ? theme.colors[color][0] : "transparent",
+                      textDecoration: "none",
+                      fontSize: theme.fontSizes.sm,
+                      border: "none",
+                    }}>
+                    <Text size="xs">{item.label}</Text>
+                  </UnstyledButton>
+                </motion.div>
+              ))}
+            </Box>
+          </motion.div>
         </Collapse>
       )}
-    </Box>
+    </motion.div>
   );
 }
 
@@ -204,7 +257,10 @@ export function Sidebar({ width = 260 }: SidebarProps) {
   const theme = useMantineTheme();
 
   return (
-    <Box
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={navContainerVariants}
       style={{
         width: rem(width),
         height: "100vh",
@@ -214,40 +270,57 @@ export function Sidebar({ width = 260 }: SidebarProps) {
         flexDirection: "column",
       }}>
       {/* Logo/Brand Section */}
-      <Box
-        p="md"
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         style={{
+          padding: theme.spacing.md,
           borderBottom: `1px solid ${theme.colors.gray[3]}`,
         }}>
         <Group gap="sm">
-          <IconCoins size={28} color={theme.colors.blue[6]} />
-          <Text size="lg" fw={700} c={theme.colors.blue[6]}>
-            AccounTech
-          </Text>
+          <motion.div whileHover={{ rotate: 360, scale: 1.1 }} transition={{ duration: 0.6 }}>
+            <IconCoins size={28} color={theme.colors.blue[6]} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}>
+            <Text size="lg" fw={700} c={theme.colors.blue[6]}>
+              AccounTech
+            </Text>
+          </motion.div>
         </Group>
-      </Box>
+      </motion.div>
 
       {/* Navigation */}
       <ScrollArea style={{ flex: 1 }} p="md">
-        <Box>
-          {mainNavigation.map((item) => (
-            <Box key={item.label} mb="xs">
+        <motion.div variants={navContainerVariants} initial="hidden" animate="visible">
+          {mainNavigation.map((item, index) => (
+            <motion.div
+              key={item.label}
+              variants={navItemVariants}
+              custom={index}
+              style={{ marginBottom: theme.spacing.xs }}>
               <NavItem {...item} />
-            </Box>
+            </motion.div>
           ))}
-        </Box>
+        </motion.div>
       </ScrollArea>
 
       {/* Footer Section */}
-      <Box
-        p="md"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.4 }}
         style={{
+          padding: theme.spacing.md,
           borderTop: `1px solid ${theme.colors.gray[3]}`,
         }}>
         <Text size="xs" c="dimmed" ta="center">
           v1.0.0 Beta
         </Text>
-      </Box>
-    </Box>
+      </motion.div>
+    </motion.div>
   );
 }

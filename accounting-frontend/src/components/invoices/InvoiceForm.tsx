@@ -4,16 +4,8 @@ import { useForm } from "@mantine/form";
 import { Box, TextInput, Textarea, Button, Group, Paper, Title, Select, Grid, Stack, Table, ActionIcon, NumberInput, Text, Divider, Card, Modal } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
-import {
-  IconCheck,
-  IconX,
-  IconPlus,
-  IconTrash,
-  IconCalculator,
-  IconPackage,
-  IconUserPlus,
-  IconShoppingCart,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { IconCheck, IconX, IconPlus, IconTrash, IconCalculator, IconPackage, IconUserPlus, IconShoppingCart } from "@tabler/icons-react";
 import Decimal from "decimal.js";
 import { useCurrency } from "../../hooks/useCurrency";
 import type {
