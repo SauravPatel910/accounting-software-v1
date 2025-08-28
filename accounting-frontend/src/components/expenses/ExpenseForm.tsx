@@ -1,35 +1,13 @@
 import { useState, useEffect } from "react";
-import {
-  Modal,
-  Button,
-  TextInput,
-  Group,
-  Grid,
-  Select,
-  Textarea,
-  Stack,
-  Title,
-  NumberInput,
-  FileInput,
-  Text,
-  Paper,
-  Divider,
-  Autocomplete,
-} from "@mantine/core";
+// prettier-ignore
+import { Modal, Button, TextInput, Group, Grid, Select, Textarea, Stack, Title, NumberInput, FileInput, Text, Paper, Divider, Autocomplete } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconReceipt } from "@tabler/icons-react";
 import Decimal from "decimal.js";
-import {
-  expenseApi,
-  vendorApi,
-  expenseCategoryApi,
-  type Expense,
-  type CreateExpenseData,
-  type Vendor,
-  type ExpenseCategory,
-} from "../../services/api";
+// prettier-ignore
+import { expenseApi, vendorApi, expenseCategoryApi, type Expense, type CreateExpenseData, type Vendor, type ExpenseCategory } from "../../services/api";
 
 interface ExpenseFormProps {
   opened: boolean;

@@ -1,16 +1,6 @@
 import { useForm } from "@mantine/form";
-import {
-  Box,
-  TextInput,
-  Textarea,
-  Button,
-  Group,
-  Paper,
-  Title,
-  Select,
-  Grid,
-  Stack,
-} from "@mantine/core";
+// prettier-ignore
+import { Box, TextInput, Textarea, Button, Group, Paper, Title, Select, Grid, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 

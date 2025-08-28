@@ -1,37 +1,9 @@
 import { useState } from "react";
-import {
-  Paper,
-  Title,
-  Text,
-  Group,
-  Stack,
-  Table,
-  Button,
-  Badge,
-  Divider,
-  Grid,
-  Card,
-  ActionIcon,
-  Box,
-  CopyButton,
-  Tooltip,
-  Menu,
-  Modal,
-  Textarea,
-} from "@mantine/core";
+// prettier-ignore
+import { Paper, Title, Text, Group, Stack, Table, Button, Badge, Divider, Grid, Card, ActionIcon, Box, CopyButton, Tooltip, Menu, Modal, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import {
-  IconPrinter,
-  IconDownload,
-  IconMail,
-  IconEdit,
-  IconCopy,
-  IconCheck,
-  IconDots,
-  IconX,
-  IconSend,
-  IconCreditCard,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { IconPrinter, IconDownload, IconMail, IconEdit, IconCopy, IconCheck, IconDots, IconX, IconSend, IconCreditCard } from "@tabler/icons-react";
 import type { Invoice, EmailInvoiceData } from "../../services/api";
 
 interface InvoiceDetailProps {

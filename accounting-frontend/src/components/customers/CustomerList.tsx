@@ -1,34 +1,8 @@
 import { useState } from "react";
-import {
-  Box,
-  TextInput,
-  Button,
-  Group,
-  ActionIcon,
-  Menu,
-  Badge,
-  Text,
-  Paper,
-  Modal,
-  Table,
-  ScrollArea,
-  // Stack,
-  Pagination,
-  Select,
-} from "@mantine/core";
-import {
-  IconSearch,
-  IconPlus,
-  IconDots,
-  IconEdit,
-  IconTrash,
-  IconMail,
-  IconPhone,
-  IconEye,
-  IconFileInvoice,
-  IconSortAscending,
-  IconSortDescending,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Box, TextInput, Button, Group, ActionIcon, Menu, Badge, Text, Paper, Modal, Table, ScrollArea, Pagination, Select } from "@mantine/core";
+// prettier-ignore
+import { IconSearch, IconPlus, IconDots, IconEdit, IconTrash, IconMail, IconPhone, IconEye, IconFileInvoice, IconSortAscending, IconSortDescending } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 
 // Types

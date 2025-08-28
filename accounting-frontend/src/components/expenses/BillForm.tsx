@@ -1,34 +1,13 @@
 import { useState, useEffect } from "react";
-import {
-  Modal,
-  Button,
-  TextInput,
-  Group,
-  Grid,
-  Select,
-  Textarea,
-  Stack,
-  Title,
-  Table,
-  NumberInput,
-  ActionIcon,
-  Paper,
-  Text,
-  Divider,
-} from "@mantine/core";
+// prettier-ignore
+import { Modal, Button, TextInput, Group, Grid, Select, Textarea, Stack, Title, Table, NumberInput, ActionIcon, Paper, Text, Divider } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import Decimal from "decimal.js";
-import {
-  billApi,
-  vendorApi,
-  type Bill,
-  type CreateBillData,
-  type BillItem,
-  type Vendor,
-} from "../../services/api";
+// prettier-ignore
+import { billApi, vendorApi, type Bill, type CreateBillData, type BillItem, type Vendor } from "../../services/api";
 
 interface BillFormProps {
   opened: boolean;

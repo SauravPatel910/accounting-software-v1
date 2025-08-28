@@ -1,26 +1,7 @@
-import {
-  Paper,
-  Stack,
-  Group,
-  Text,
-  Button,
-  Card,
-  Table,
-  NumberFormatter,
-  Box,
-  Badge,
-  Select,
-  Flex,
-  ActionIcon,
-} from "@mantine/core";
-import {
-  IconDownload,
-  IconPrinter,
-  IconShare,
-  IconCalendar,
-  IconTrendingUp,
-  IconTrendingDown,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Paper, Stack, Group, Text, Button, Card, Table, NumberFormatter, Box, Badge, Select, Flex, ActionIcon } from "@mantine/core";
+// prettier-ignore
+import { IconDownload, IconPrinter, IconShare, IconCalendar, IconTrendingUp, IconTrendingDown } from "@tabler/icons-react";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { DatePickerInput } from "@mantine/dates";

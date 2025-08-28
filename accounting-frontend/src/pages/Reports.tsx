@@ -1,12 +1,6 @@
 import { Box, Text, Card, SimpleGrid, Button, Group, Tabs } from "@mantine/core";
-import {
-  IconReport,
-  IconFileText,
-  IconChartBar,
-  IconTax,
-  IconTrendingUp,
-  IconScale,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { IconReport, IconFileText, IconChartBar, IconTax, IconTrendingUp, IconScale } from "@tabler/icons-react";
 import { ProfitLoss, BalanceSheet } from "../components/reports";
 
 export function Reports() {

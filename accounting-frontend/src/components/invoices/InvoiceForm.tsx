@@ -1,23 +1,7 @@
 import { useState } from "react";
 import { useForm } from "@mantine/form";
-import {
-  Box,
-  TextInput,
-  Textarea,
-  Button,
-  Group,
-  Paper,
-  Title,
-  Select,
-  Grid,
-  Stack,
-  Table,
-  ActionIcon,
-  NumberInput,
-  Text,
-  Divider,
-  Card,
-} from "@mantine/core";
+// prettier-ignore
+import { Box, TextInput, Textarea, Button, Group, Paper, Title, Select, Grid, Stack, Table, ActionIcon, NumberInput, Text, Divider, Card } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX, IconPlus, IconTrash, IconCalculator } from "@tabler/icons-react";

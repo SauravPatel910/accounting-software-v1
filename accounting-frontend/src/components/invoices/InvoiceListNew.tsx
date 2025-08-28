@@ -1,37 +1,8 @@
 import { useState } from "react";
-import {
-  Box,
-  TextInput,
-  Button,
-  Group,
-  ActionIcon,
-  Menu,
-  Badge,
-  Text,
-  Paper,
-  Modal,
-  Table,
-  ScrollArea,
-  Pagination,
-  Select,
-  Grid,
-  Card,
-  Stack,
-} from "@mantine/core";
-import {
-  IconSearch,
-  IconDots,
-  IconEdit,
-  IconTrash,
-  IconEye,
-  IconDownload,
-  IconSend,
-  IconFileInvoice,
-  IconCheck,
-  IconX,
-  IconAlertTriangle,
-  IconClock,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Box, TextInput, Button, Group, ActionIcon, Menu, Badge, Text, Paper, Modal, Table, ScrollArea, Pagination, Select, Grid, Card, Stack } from "@mantine/core";
+// prettier-ignore
+import { IconSearch, IconDots, IconEdit, IconTrash, IconEye, IconDownload, IconSend, IconFileInvoice, IconCheck, IconX, IconAlertTriangle, IconClock } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import type { Invoice, Customer } from "../../services/api";
 

@@ -1,24 +1,7 @@
-import {
-  Box,
-  Grid,
-  Card,
-  Text,
-  Group,
-  Stack,
-  Badge,
-  ActionIcon,
-  Progress,
-  SimpleGrid,
-} from "@mantine/core";
-import {
-  IconTrendingUp,
-  IconFileInvoice,
-  IconUsers,
-  IconCreditCard,
-  IconArrowUpRight,
-  IconArrowDownRight,
-  IconDots,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Box, Grid, Card, Text, Group, Stack, Badge, ActionIcon, Progress, SimpleGrid } from "@mantine/core";
+// prettier-ignore
+import { IconTrendingUp, IconFileInvoice, IconUsers, IconCreditCard, IconArrowUpRight, IconArrowDownRight, IconDots } from "@tabler/icons-react";
 
 // Mock data - replace with real data from API
 const dashboardData = {

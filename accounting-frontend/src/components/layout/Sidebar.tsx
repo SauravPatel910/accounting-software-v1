@@ -1,26 +1,9 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router";
-import {
-  Box,
-  Group,
-  ScrollArea,
-  Text,
-  UnstyledButton,
-  rem,
-  useMantineTheme,
-  Collapse,
-} from "@mantine/core";
-import {
-  IconDashboard,
-  IconFileInvoice,
-  IconCreditCard,
-  IconUsers,
-  IconReport,
-  IconSettings,
-  IconChevronRight,
-  IconCoins,
-  IconCalculator,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Box, Group, ScrollArea, Text, UnstyledButton, rem, useMantineTheme, Collapse } from "@mantine/core";
+// prettier-ignore
+import { IconDashboard, IconFileInvoice, IconCreditCard, IconUsers, IconReport, IconSettings, IconChevronRight, IconCoins, IconCalculator } from "@tabler/icons-react";
 
 const mainNavigation = [
   {

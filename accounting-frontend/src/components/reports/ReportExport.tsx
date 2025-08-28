@@ -1,28 +1,7 @@
-import {
-  Button,
-  Group,
-  Menu,
-  rem,
-  Modal,
-  Stack,
-  Text,
-  Radio,
-  Select,
-  Checkbox,
-  Box,
-  Progress,
-  Alert,
-} from "@mantine/core";
-import {
-  IconDownload,
-  IconFileTypePdf,
-  IconFileTypeXls,
-  IconFileTypeCsv,
-  IconSettings,
-  IconCheck,
-  IconX,
-  IconInfoCircle,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Button, Group, Menu, rem, Modal, Stack, Text, Radio, Select, Checkbox, Box, Progress, Alert } from "@mantine/core";
+// prettier-ignore
+import { IconDownload, IconFileTypePdf, IconFileTypeXls, IconFileTypeCsv, IconSettings, IconCheck, IconX, IconInfoCircle } from "@tabler/icons-react";
 import { useState } from "react";
 import { motion } from "motion/react";
 

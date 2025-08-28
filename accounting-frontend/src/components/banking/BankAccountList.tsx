@@ -1,30 +1,7 @@
-import {
-  Table,
-  Group,
-  Text,
-  ActionIcon,
-  Badge,
-  Box,
-  Button,
-  Paper,
-  Card,
-  Stack,
-  NumberFormatter,
-  TextInput,
-  Select,
-  Flex,
-} from "@mantine/core";
-import {
-  IconEdit,
-  IconTrash,
-  IconEye,
-  IconPlus,
-  IconSearch,
-  IconBuildingBank,
-  IconCreditCard,
-  IconWallet,
-  IconCoins,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Table, Group, Text, ActionIcon, Badge, Box, Button, Paper, Card, Stack, NumberFormatter, TextInput, Select, Flex } from "@mantine/core";
+// prettier-ignore
+import { IconEdit, IconTrash, IconEye, IconPlus, IconSearch, IconBuildingBank, IconCreditCard, IconWallet, IconCoins } from "@tabler/icons-react";
 import { useState } from "react";
 import { motion } from "motion/react";
 import Decimal from "decimal.js";

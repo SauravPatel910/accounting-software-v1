@@ -1,34 +1,8 @@
 import { useState, useEffect } from "react";
-import {
-  Table,
-  Group,
-  Text,
-  ActionIcon,
-  Badge,
-  ScrollArea,
-  TextInput,
-  Button,
-  Paper,
-  Menu,
-  Stack,
-  Grid,
-  Card,
-  Avatar,
-  Select,
-} from "@mantine/core";
-import {
-  IconSearch,
-  IconPlus,
-  IconEdit,
-  IconTrash,
-  IconDots,
-  IconFileText,
-  IconCalendar,
-  IconCurrencyDollar,
-  IconFilter,
-  IconEye,
-  IconCheck,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Table, Group, Text, ActionIcon, Badge, ScrollArea, TextInput, Button, Paper, Menu, Stack, Grid, Card, Avatar, Select } from "@mantine/core";
+// prettier-ignore
+import { IconSearch, IconPlus, IconEdit, IconTrash, IconDots, IconFileText, IconCalendar, IconCurrencyDollar, IconFilter, IconEye, IconCheck } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { billApi, type Bill } from "../../services/api";

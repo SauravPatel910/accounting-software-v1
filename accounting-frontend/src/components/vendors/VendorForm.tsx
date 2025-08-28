@@ -1,15 +1,6 @@
 import { useEffect } from "react";
-import {
-  Modal,
-  Button,
-  TextInput,
-  Group,
-  Grid,
-  Select,
-  Textarea,
-  Stack,
-  Title,
-} from "@mantine/core";
+// prettier-ignore
+import { Modal, Button, TextInput, Group, Grid, Select, Textarea, Stack, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { vendorApi, type Vendor, type CreateVendorData } from "../../services/api";

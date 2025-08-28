@@ -1,23 +1,7 @@
-import {
-  Group,
-  Text,
-  UnstyledButton,
-  Menu,
-  Avatar,
-  ActionIcon,
-  Badge,
-  Tooltip,
-  Box,
-} from "@mantine/core";
-import {
-  IconBell,
-  IconSearch,
-  IconSettings,
-  IconLogout,
-  IconUser,
-  IconHelp,
-  IconSun,
-} from "@tabler/icons-react";
+// prettier-ignore
+import { Group, Text, UnstyledButton, Menu, Avatar, ActionIcon, Badge, Tooltip, Box } from "@mantine/core";
+// prettier-ignore
+import { IconBell, IconSearch, IconSettings, IconLogout, IconUser, IconHelp, IconSun } from "@tabler/icons-react";
 
 interface HeaderProps {
   height?: number;
