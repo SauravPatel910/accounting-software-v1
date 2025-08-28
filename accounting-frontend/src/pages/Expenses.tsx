@@ -11,7 +11,7 @@ type ModalType =
   | { type: "expense-form"; expense?: Expense }
   | null;
 
-export default function Expenses() {
+export function Expenses() {
   const [activeTab, setActiveTab] = useState<string | null>("vendors");
   const [modal, setModal] = useState<ModalType>(null);
   const [refreshKey, setRefreshKey] = useState(0);

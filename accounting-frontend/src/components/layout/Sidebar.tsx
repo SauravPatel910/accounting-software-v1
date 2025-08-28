@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router";
 // prettier-ignore
 import { Box, Group, ScrollArea, Text, UnstyledButton, rem, useMantineTheme, Collapse } from "@mantine/core";
 // prettier-ignore
-import { IconDashboard, IconFileInvoice, IconCreditCard, IconUsers, IconReport, IconSettings, IconChevronRight, IconCoins, IconCalculator, IconPackage } from "@tabler/icons-react";
+import { IconDashboard, IconFileInvoice, IconCreditCard, IconUsers, IconReport, IconSettings, IconChevronRight, IconCoins, IconCalculator, IconPackage, IconTestPipe, IconReceipt } from "@tabler/icons-react";
 
 const mainNavigation = [
   {
@@ -11,6 +11,12 @@ const mainNavigation = [
     icon: IconDashboard,
     link: "/",
     color: "blue",
+  },
+  {
+    label: "Demo Center",
+    icon: IconTestPipe,
+    link: "/demo",
+    color: "pink",
   },
   {
     label: "Invoices",
@@ -39,6 +45,12 @@ const mainNavigation = [
     icon: IconPackage,
     link: "/products",
     color: "violet",
+  },
+  {
+    label: "Expenses",
+    icon: IconReceipt,
+    link: "/expenses",
+    color: "red",
   },
   {
     label: "Customers",

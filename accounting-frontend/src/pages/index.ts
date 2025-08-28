@@ -7,3 +7,5 @@ export { Customers } from "./Customers";
 export { Accounts } from "./Accounts";
 export { Reports } from "./Reports";
 export { Settings } from "./Settings";
+export { Demo } from "./Demo";
+export { Expenses } from "./Expenses";
