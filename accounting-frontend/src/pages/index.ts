@@ -1,5 +1,7 @@
 export { Dashboard } from "./Dashboard";
 export { Invoices } from "./Invoices";
+export { CreateInvoice } from "./CreateInvoice";
+export { Products } from "./Products";
 export { Transactions } from "./Transactions";
 export { Customers } from "./Customers";
 export { Accounts } from "./Accounts";

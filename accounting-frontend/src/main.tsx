@@ -29,7 +29,8 @@ createRoot(document.getElementById("root")!).render(
           headings: {
             fontFamily: "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
           },
-        }}>
+        }}
+        defaultColorScheme="light">
         <Notifications />
         <App />
         <ReactQueryDevtools initialIsOpen={false} />

@@ -361,7 +361,7 @@ class EmailService {
   // Send invoice email with PDF attachment
   async sendInvoiceEmail(
     invoice: Invoice,
-    customer: Customer,
+    _customer: Customer,
     emailData: EmailInvoiceData,
     pdfBase64?: string
   ): Promise<void> {

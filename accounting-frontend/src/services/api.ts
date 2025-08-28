@@ -24,8 +24,31 @@ interface Customer {
   updatedAt: Date;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  size: string;
+  pattern?: string;
+  loadIndex?: string;
+  speedRating?: string;
+  type: "car" | "truck" | "motorcycle" | "atv" | "other";
+  price: number;
+  costPrice?: number;
+  stock: number;
+  minStock?: number;
+  sku: string;
+  description?: string;
+  category: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface InvoiceItem {
   id: string;
+  productId?: string;
+  product?: Product;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -64,6 +87,24 @@ interface CreateCustomerData {
   zipCode?: string;
   country: string;
   taxId?: string;
+}
+
+interface CreateProductData {
+  name: string;
+  brand: string;
+  size: string;
+  pattern?: string;
+  loadIndex?: string;
+  speedRating?: string;
+  type: "car" | "truck" | "motorcycle" | "atv" | "other";
+  price: number;
+  costPrice?: number;
+  stock: number;
+  minStock?: number;
+  sku: string;
+  description?: string;
+  category: string;
+  isActive?: boolean;
 }
 
 interface CreateInvoiceData {
@@ -373,6 +414,60 @@ export const customerApi = {
     const response = await apiClient.get<Customer[]>(
       `/customers/search?q=${encodeURIComponent(query)}`
     );
+    return response.data;
+  },
+};
+
+// Product API
+export const productApi = {
+  // Get all products
+  getAll: async (): Promise<Product[]> => {
+    const response = await apiClient.get<Product[]>("/products");
+    return response.data;
+  },
+
+  // Get product by ID
+  getById: async (id: string): Promise<Product> => {
+    const response = await apiClient.get<Product>(`/products/${id}`);
+    return response.data;
+  },
+
+  // Create new product
+  create: async (data: CreateProductData): Promise<Product> => {
+    const response = await apiClient.post<Product>("/products", data);
+    return response.data;
+  },
+
+  // Update product
+  update: async (id: string, data: Partial<CreateProductData>): Promise<Product> => {
+    const response = await apiClient.put<Product>(`/products/${id}`, data);
+    return response.data;
+  },
+
+  // Delete product
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/products/${id}`);
+  },
+
+  // Search products
+  search: async (query: string): Promise<Product[]> => {
+    const response = await apiClient.get<Product[]>(
+      `/products/search?q=${encodeURIComponent(query)}`
+    );
+    return response.data;
+  },
+
+  // Get products by category
+  getByCategory: async (category: string): Promise<Product[]> => {
+    const response = await apiClient.get<Product[]>(
+      `/products/category/${encodeURIComponent(category)}`
+    );
+    return response.data;
+  },
+
+  // Update stock
+  updateStock: async (id: string, quantity: number): Promise<Product> => {
+    const response = await apiClient.patch<Product>(`/products/${id}/stock`, { quantity });
     return response.data;
   },
 };
@@ -729,9 +824,11 @@ export const expenseCategoryApi = {
 // Export types for use in components
 export type {
   Customer,
+  Product,
   Invoice,
   InvoiceItem,
   CreateCustomerData,
+  CreateProductData,
   CreateInvoiceData,
   EmailInvoiceData,
   Vendor,

@@ -1,12 +1,26 @@
 import { useState } from "react";
 import { useForm } from "@mantine/form";
 // prettier-ignore
-import { Box, TextInput, Textarea, Button, Group, Paper, Title, Select, Grid, Stack, Table, ActionIcon, NumberInput, Text, Divider, Card } from "@mantine/core";
+import { Box, TextInput, Textarea, Button, Group, Paper, Title, Select, Grid, Stack, Table, ActionIcon, NumberInput, Text, Divider, Card, Modal } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX, IconPlus, IconTrash, IconCalculator } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconX,
+  IconPlus,
+  IconTrash,
+  IconCalculator,
+  IconPackage,
+} from "@tabler/icons-react";
 import Decimal from "decimal.js";
-import type { Invoice, Customer, InvoiceItem, CreateInvoiceData } from "../../services/api";
+import type {
+  Invoice,
+  Customer,
+  InvoiceItem,
+  CreateInvoiceData,
+  Product,
+} from "../../services/api";
+import { ProductList } from "../products";
 
 interface InvoiceFormProps {
   invoice?: Partial<Invoice>;
@@ -60,6 +74,9 @@ export function InvoiceForm({
       },
     ]
   );
+
+  const [productSelectionModal, setProductSelectionModal] = useState(false);
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number>(-1);
 
   const form = useForm<CreateInvoiceData>({
     validate: {
@@ -159,6 +176,69 @@ export function InvoiceForm({
     }
   };
 
+  // Add product from selection
+  const addProductItem = () => {
+    setSelectedItemIndex(-1); // -1 means creating new item
+    setProductSelectionModal(true);
+  };
+
+  // Select product for existing item
+  const selectProductForItem = (index: number) => {
+    setSelectedItemIndex(index);
+    setProductSelectionModal(true);
+  };
+
+  // Handle product selection
+  const handleProductSelect = (product: Product) => {
+    const productItem: InvoiceItem = {
+      id: Date.now().toString(),
+      productId: product.id,
+      product: product,
+      description: `${product.brand} ${product.name} - ${product.size}${
+        product.pattern ? ` (${product.pattern})` : ""
+      }`,
+      quantity: 1,
+      unitPrice: product.price,
+      total: product.price,
+    };
+
+    if (selectedItemIndex === -1) {
+      // Adding new item
+      const newItems = [...items, productItem];
+      setItems(newItems);
+
+      const totals = calculateTotals(newItems, form.values.taxRate);
+      form.setValues({
+        ...form.values,
+        ...totals,
+        items: newItems,
+      });
+    } else {
+      // Updating existing item
+      const newItems = [...items];
+      newItems[selectedItemIndex] = {
+        ...newItems[selectedItemIndex],
+        productId: product.id,
+        product: product,
+        description: `${product.brand} ${product.name} - ${product.size}${
+          product.pattern ? ` (${product.pattern})` : ""
+        }`,
+        unitPrice: product.price,
+        total: product.price * newItems[selectedItemIndex].quantity,
+      };
+      setItems(newItems);
+
+      const totals = calculateTotals(newItems, form.values.taxRate);
+      form.setValues({
+        ...form.values,
+        ...totals,
+        items: newItems,
+      });
+    }
+
+    setProductSelectionModal(false);
+  };
+
   // Update tax rate
   const updateTaxRate = (taxRate: number) => {
     const totals = calculateTotals(items, taxRate);
@@ -210,245 +290,282 @@ export function InvoiceForm({
   }));
 
   return (
-    <Paper shadow="xs" radius="md" p="md" withBorder>
-      <Title order={3} mb="lg">
-        {invoice ? "Edit Invoice" : "Create New Invoice"}
-      </Title>
+    <>
+      <Paper shadow="xs" radius="md" p="md" withBorder>
+        <Title order={3} mb="lg">
+          {invoice ? "Edit Invoice" : "Create New Invoice"}
+        </Title>
 
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Stack gap="xl">
-          {/* Invoice Header */}
-          <Box>
-            <Title order={5} mb="sm" c="dimmed">
-              Invoice Information
-            </Title>
-            <Grid>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  label="Customer"
-                  placeholder="Select a customer"
-                  data={customerOptions}
-                  required
-                  searchable
-                  {...form.getInputProps("customerId")}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Invoice Number"
-                  placeholder="Enter invoice number"
-                  required
-                  {...form.getInputProps("invoiceNumber")}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <DateInput
-                  label="Issue Date"
-                  placeholder="Select issue date"
-                  required
-                  {...form.getInputProps("issueDate")}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <DateInput
-                  label="Due Date"
-                  placeholder="Select due date"
-                  required
-                  {...form.getInputProps("dueDate")}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 8 }}>
-                <TextInput
-                  label="Description"
-                  placeholder="Brief description of services/products"
-                  required
-                  {...form.getInputProps("description")}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <Select
-                  label="Status"
-                  data={[
-                    { value: "draft", label: "Draft" },
-                    { value: "sent", label: "Sent" },
-                    { value: "paid", label: "Paid" },
-                    { value: "overdue", label: "Overdue" },
-                    { value: "cancelled", label: "Cancelled" },
-                  ]}
-                  {...form.getInputProps("status")}
-                />
-              </Grid.Col>
-            </Grid>
-          </Box>
-
-          {/* Customer Details Display */}
-          {selectedCustomer && (
-            <Card withBorder radius="md" p="md" bg="gray.0">
-              <Title order={6} mb="sm">
-                Bill To:
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <Stack gap="xl">
+            {/* Invoice Header */}
+            <Box>
+              <Title order={5} mb="sm" c="dimmed">
+                Invoice Information
               </Title>
-              <Text size="sm" fw={500}>
-                {selectedCustomer.name}
-              </Text>
-              <Text size="sm">{selectedCustomer.company}</Text>
-              <Text size="sm" c="dimmed">
-                {selectedCustomer.email}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {selectedCustomer.address}, {selectedCustomer.city}, {selectedCustomer.country}
-              </Text>
-            </Card>
-          )}
-
-          {/* Line Items */}
-          <Box>
-            <Group justify="space-between" mb="sm">
-              <Title order={5} c="dimmed">
-                Line Items
-              </Title>
-              <Button
-                leftSection={<IconPlus size={16} />}
-                variant="light"
-                size="sm"
-                onClick={addItem}>
-                Add Item
-              </Button>
-            </Group>
-
-            <Paper withBorder radius="md" p="sm">
-              <Table>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Description</Table.Th>
-                    <Table.Th style={{ width: "120px" }}>Quantity</Table.Th>
-                    <Table.Th style={{ width: "140px" }}>Unit Price</Table.Th>
-                    <Table.Th style={{ width: "140px" }}>Total</Table.Th>
-                    <Table.Th style={{ width: "60px" }}>Action</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {items.map((item, index) => (
-                    <Table.Tr key={item.id}>
-                      <Table.Td>
-                        <TextInput
-                          placeholder="Item description"
-                          value={item.description}
-                          onChange={(e) => updateItem(index, "description", e.target.value)}
-                          size="sm"
-                          variant="unstyled"
-                        />
-                      </Table.Td>
-                      <Table.Td>
-                        <NumberInput
-                          placeholder="0"
-                          value={item.quantity}
-                          onChange={(value) => updateItem(index, "quantity", value || 0)}
-                          min={0}
-                          step={1}
-                          size="sm"
-                          variant="unstyled"
-                        />
-                      </Table.Td>
-                      <Table.Td>
-                        <NumberInput
-                          placeholder="0.00"
-                          value={item.unitPrice}
-                          onChange={(value) => updateItem(index, "unitPrice", value || 0)}
-                          min={0}
-                          step={0.01}
-                          decimalScale={2}
-                          fixedDecimalScale
-                          prefix="$"
-                          size="sm"
-                          variant="unstyled"
-                        />
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm" fw={500}>
-                          ${item.total.toFixed(2)}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <ActionIcon
-                          color="red"
-                          variant="subtle"
-                          onClick={() => removeItem(index)}
-                          disabled={items.length === 1}>
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </Paper>
-          </Box>
-
-          {/* Totals */}
-          <Box>
-            <Paper withBorder radius="md" p="md">
               <Grid>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    label="Customer"
+                    placeholder="Select a customer"
+                    data={customerOptions}
+                    required
+                    searchable
+                    {...form.getInputProps("customerId")}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="Invoice Number"
+                    placeholder="Enter invoice number"
+                    required
+                    {...form.getInputProps("invoiceNumber")}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <DateInput
+                    label="Issue Date"
+                    placeholder="Select issue date"
+                    required
+                    {...form.getInputProps("issueDate")}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <DateInput
+                    label="Due Date"
+                    placeholder="Select due date"
+                    required
+                    {...form.getInputProps("dueDate")}
+                  />
+                </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 8 }}>
-                  <Textarea
-                    label="Notes"
-                    placeholder="Additional notes or payment terms"
-                    rows={4}
-                    {...form.getInputProps("notes")}
+                  <TextInput
+                    label="Description"
+                    placeholder="Brief description of services/products"
+                    required
+                    {...form.getInputProps("description")}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                  <Stack gap="sm">
-                    <Group justify="space-between">
-                      <Text size="sm">Subtotal:</Text>
-                      <Text size="sm" fw={500}>
-                        ${calculateTotals(items, form.values.taxRate).subtotal.toFixed(2)}
-                      </Text>
-                    </Group>
-
-                    <Group justify="space-between" align="flex-end">
-                      <NumberInput
-                        label="Tax Rate (%)"
-                        value={form.values.taxRate}
-                        onChange={(value) => updateTaxRate(typeof value === "number" ? value : 0)}
-                        min={0}
-                        max={100}
-                        step={0.1}
-                        decimalScale={1}
-                        size="sm"
-                        style={{ width: "120px" }}
-                      />
-                      <Text size="sm" fw={500}>
-                        ${calculateTotals(items, form.values.taxRate).taxAmount.toFixed(2)}
-                      </Text>
-                    </Group>
-
-                    <Divider />
-
-                    <Group justify="space-between">
-                      <Text size="lg" fw={700}>
-                        Total:
-                      </Text>
-                      <Text size="lg" fw={700} c="green">
-                        ${calculateTotals(items, form.values.taxRate).total.toFixed(2)}
-                      </Text>
-                    </Group>
-                  </Stack>
+                  <Select
+                    label="Status"
+                    data={[
+                      { value: "draft", label: "Draft" },
+                      { value: "sent", label: "Sent" },
+                      { value: "paid", label: "Paid" },
+                      { value: "overdue", label: "Overdue" },
+                      { value: "cancelled", label: "Cancelled" },
+                    ]}
+                    {...form.getInputProps("status")}
+                  />
                 </Grid.Col>
               </Grid>
-            </Paper>
-          </Box>
+            </Box>
 
-          {/* Form Actions */}
-          <Group justify="flex-end" mt="xl">
-            <Button variant="light" onClick={onCancel} disabled={loading}>
-              Cancel
-            </Button>
-            <Button type="submit" loading={loading} leftSection={<IconCalculator size={16} />}>
-              {invoice ? "Update Invoice" : "Create Invoice"}
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Paper>
+            {/* Customer Details Display */}
+            {selectedCustomer && (
+              <Card withBorder radius="md" p="md" bg="gray.0">
+                <Title order={6} mb="sm">
+                  Bill To:
+                </Title>
+                <Text size="sm" fw={500}>
+                  {selectedCustomer.name}
+                </Text>
+                <Text size="sm">{selectedCustomer.company}</Text>
+                <Text size="sm" c="dimmed">
+                  {selectedCustomer.email}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {selectedCustomer.address}, {selectedCustomer.city}, {selectedCustomer.country}
+                </Text>
+              </Card>
+            )}
+
+            {/* Line Items */}
+            <Box>
+              <Group justify="space-between" mb="sm">
+                <Title order={5} c="dimmed">
+                  Line Items
+                </Title>
+                <Group>
+                  <Button
+                    leftSection={<IconPackage size={16} />}
+                    variant="filled"
+                    size="sm"
+                    onClick={addProductItem}>
+                    Add Product
+                  </Button>
+                  <Button
+                    leftSection={<IconPlus size={16} />}
+                    variant="light"
+                    size="sm"
+                    onClick={addItem}>
+                    Add Custom Item
+                  </Button>
+                </Group>
+              </Group>
+
+              <Paper withBorder radius="md" p="sm">
+                <Table>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th style={{ width: "60px" }}>Product</Table.Th>
+                      <Table.Th>Description</Table.Th>
+                      <Table.Th style={{ width: "120px" }}>Quantity</Table.Th>
+                      <Table.Th style={{ width: "140px" }}>Unit Price</Table.Th>
+                      <Table.Th style={{ width: "140px" }}>Total</Table.Th>
+                      <Table.Th style={{ width: "60px" }}>Action</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {items.map((item, index) => (
+                      <Table.Tr key={item.id}>
+                        <Table.Td>
+                          <ActionIcon
+                            variant="light"
+                            color="blue"
+                            size="sm"
+                            onClick={() => selectProductForItem(index)}
+                            title="Select Product">
+                            <IconPackage size={14} />
+                          </ActionIcon>
+                        </Table.Td>
+                        <Table.Td>
+                          <TextInput
+                            placeholder="Item description"
+                            value={item.description}
+                            onChange={(e) => updateItem(index, "description", e.target.value)}
+                            size="sm"
+                            variant="unstyled"
+                          />
+                          {item.product && (
+                            <Text size="xs" c="blue">
+                              {item.product.brand} {item.product.name} - SKU: {item.product.sku}
+                            </Text>
+                          )}
+                        </Table.Td>
+                        <Table.Td>
+                          <NumberInput
+                            placeholder="0"
+                            value={item.quantity}
+                            onChange={(value) => updateItem(index, "quantity", value || 0)}
+                            min={0}
+                            step={1}
+                            size="sm"
+                            variant="unstyled"
+                          />
+                        </Table.Td>
+                        <Table.Td>
+                          <NumberInput
+                            placeholder="0.00"
+                            value={item.unitPrice}
+                            onChange={(value) => updateItem(index, "unitPrice", value || 0)}
+                            min={0}
+                            step={0.01}
+                            decimalScale={2}
+                            fixedDecimalScale
+                            prefix="$"
+                            size="sm"
+                            variant="unstyled"
+                          />
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" fw={500}>
+                            ${item.total.toFixed(2)}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <ActionIcon
+                            color="red"
+                            variant="subtle"
+                            onClick={() => removeItem(index)}
+                            disabled={items.length === 1}>
+                            <IconTrash size={16} />
+                          </ActionIcon>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </Paper>
+            </Box>
+
+            {/* Totals */}
+            <Box>
+              <Paper withBorder radius="md" p="md">
+                <Grid>
+                  <Grid.Col span={{ base: 12, md: 8 }}>
+                    <Textarea
+                      label="Notes"
+                      placeholder="Additional notes or payment terms"
+                      rows={4}
+                      {...form.getInputProps("notes")}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Stack gap="sm">
+                      <Group justify="space-between">
+                        <Text size="sm">Subtotal:</Text>
+                        <Text size="sm" fw={500}>
+                          ${calculateTotals(items, form.values.taxRate).subtotal.toFixed(2)}
+                        </Text>
+                      </Group>
+
+                      <Group justify="space-between" align="flex-end">
+                        <NumberInput
+                          label="Tax Rate (%)"
+                          value={form.values.taxRate}
+                          onChange={(value) => updateTaxRate(typeof value === "number" ? value : 0)}
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          decimalScale={1}
+                          size="sm"
+                          style={{ width: "120px" }}
+                        />
+                        <Text size="sm" fw={500}>
+                          ${calculateTotals(items, form.values.taxRate).taxAmount.toFixed(2)}
+                        </Text>
+                      </Group>
+
+                      <Divider />
+
+                      <Group justify="space-between">
+                        <Text size="lg" fw={700}>
+                          Total:
+                        </Text>
+                        <Text size="lg" fw={700} c="green">
+                          ${calculateTotals(items, form.values.taxRate).total.toFixed(2)}
+                        </Text>
+                      </Group>
+                    </Stack>
+                  </Grid.Col>
+                </Grid>
+              </Paper>
+            </Box>
+
+            {/* Form Actions */}
+            <Group justify="flex-end" mt="xl">
+              <Button variant="light" onClick={onCancel} disabled={loading}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={loading} leftSection={<IconCalculator size={16} />}>
+                {invoice ? "Update Invoice" : "Create Invoice"}
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Paper>
+
+      {/* Product Selection Modal */}
+      <Modal
+        opened={productSelectionModal}
+        onClose={() => setProductSelectionModal(false)}
+        title="Select Product"
+        size="xl"
+        padding="md">
+        <ProductList onProductSelect={handleProductSelect} selectionMode={true} />
+      </Modal>
+    </>
   );
 }

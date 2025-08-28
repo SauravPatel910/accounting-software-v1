@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { Box, Text, Button, Group, Modal } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { InvoiceList, InvoiceForm, InvoiceDetail } from "../components/invoices";
+import { InvoiceList, InvoiceDetail } from "../components/invoices";
 import { pdfService } from "../services/pdfService";
 import { emailService } from "../services/emailService";
-import type { Invoice, Customer, CreateInvoiceData, EmailInvoiceData } from "../services/api";
+import type { Invoice, Customer, EmailInvoiceData } from "../services/api";
 
 // Mock data for customers (this would come from API)
 const mockCustomers: Customer[] = [
@@ -40,54 +41,19 @@ const mockCustomers: Customer[] = [
 ];
 
 export function Invoices() {
-  const [createModalOpened, setCreateModalOpened] = useState(false);
-  const [editModalOpened, setEditModalOpened] = useState(false);
+  const navigate = useNavigate();
   const [detailModalOpened, setDetailModalOpened] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Handle invoice creation
   const handleCreateInvoice = () => {
-    setCreateModalOpened(true);
-  };
-
-  // Handle invoice submission (create/edit)
-  const handleInvoiceSubmit = async (data: CreateInvoiceData) => {
-    setLoading(true);
-    try {
-      // TODO: Replace with actual API call
-      console.log("Creating/updating invoice:", data);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      notifications.show({
-        title: selectedInvoice ? "Invoice Updated" : "Invoice Created",
-        message: selectedInvoice
-          ? "Invoice has been updated successfully"
-          : "New invoice has been created successfully",
-        color: "green",
-      });
-
-      setCreateModalOpened(false);
-      setEditModalOpened(false);
-      setSelectedInvoice(null);
-    } catch (error) {
-      console.error("Error saving invoice:", error);
-      notifications.show({
-        title: "Error",
-        message: "Failed to save invoice. Please try again.",
-        color: "red",
-      });
-    } finally {
-      setLoading(false);
-    }
+    navigate("/invoices/create");
   };
 
   // Handle invoice edit
   const handleEdit = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setEditModalOpened(true);
+    navigate(`/invoices/edit/${invoice.id}`);
   };
 
   // Handle invoice delete
@@ -266,8 +232,6 @@ export function Invoices() {
 
   // Handle cancel actions
   const handleCancel = () => {
-    setCreateModalOpened(false);
-    setEditModalOpened(false);
     setDetailModalOpened(false);
     setSelectedInvoice(null);
   };
@@ -297,39 +261,6 @@ export function Invoices() {
         loading={loading}
       />
 
-      {/* Create Invoice Modal */}
-      <Modal
-        opened={createModalOpened}
-        onClose={handleCancel}
-        title="Create New Invoice"
-        size="xl"
-        padding="md">
-        <InvoiceForm
-          customers={mockCustomers}
-          onSubmit={handleInvoiceSubmit}
-          onCancel={handleCancel}
-          loading={loading}
-        />
-      </Modal>
-
-      {/* Edit Invoice Modal */}
-      <Modal
-        opened={editModalOpened}
-        onClose={handleCancel}
-        title="Edit Invoice"
-        size="xl"
-        padding="md">
-        {selectedInvoice && (
-          <InvoiceForm
-            invoice={selectedInvoice}
-            customers={mockCustomers}
-            onSubmit={handleInvoiceSubmit}
-            onCancel={handleCancel}
-            loading={loading}
-          />
-        )}
-      </Modal>
-
       {/* Invoice Detail Modal */}
       <Modal
         opened={detailModalOpened}
@@ -342,7 +273,7 @@ export function Invoices() {
             invoice={selectedInvoice}
             onEdit={() => {
               setDetailModalOpened(false);
-              setEditModalOpened(true);
+              handleEdit(selectedInvoice);
             }}
             onDelete={() => {
               handleDelete(selectedInvoice.id);
