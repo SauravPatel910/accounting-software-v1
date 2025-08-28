@@ -277,7 +277,7 @@ This document outlines the **enhanced frontend** and **backend** frameworks, lib
 **Backend Setup**
 
 - [x] NestJS project structure
-- [ ] Prisma schema design
+- [x] Prisma schema design
 - [ ] Supabase connection
 - [ ] Authentication module
 - [ ] Basic CRUD operations
@@ -286,10 +286,10 @@ This document outlines the **enhanced frontend** and **backend** frameworks, lib
 **Frontend Setup**
 
 - [x] React + Vite + TypeScript
-- [ ] Mantine UI installation
-- [ ] React Hook Form + Zod
-- [ ] TanStack Query setup
-- [ ] Basic routing
+- [x] Mantine UI installation
+- [x] React Hook Form + Zod
+- [x] TanStack Query setup
+- [x] Basic routing
 
 ### Phase 2: Core Features (Week 3-5)
 

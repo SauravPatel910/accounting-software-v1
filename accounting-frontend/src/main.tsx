@@ -4,6 +4,7 @@ import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { AuthProvider } from "./contexts/AuthContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import "./index.css";
 import "@mantine/core/styles.css";
@@ -32,11 +33,13 @@ createRoot(document.getElementById("root")!).render(
           },
         }}
         defaultColorScheme="light">
-        <CurrencyProvider>
-          <Notifications />
-          <App />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </CurrencyProvider>
+        <AuthProvider>
+          <CurrencyProvider>
+            <Notifications />
+            <App />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </CurrencyProvider>
+        </AuthProvider>
       </MantineProvider>
     </QueryClientProvider>
   </StrictMode>

@@ -9,3 +9,4 @@ export { Reports } from "./Reports";
 export { Settings } from "./Settings";
 export { Demo } from "./Demo";
 export { Expenses } from "./Expenses";
+export { AuthPage } from "./Auth";
