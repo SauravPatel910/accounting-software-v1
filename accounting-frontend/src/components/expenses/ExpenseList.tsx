@@ -5,6 +5,7 @@ import { Table, Group, Text, ActionIcon, Badge, ScrollArea, TextInput, Button, P
 import { IconSearch, IconPlus, IconEdit, IconTrash, IconDots, IconReceipt, IconCurrencyDollar, IconFilter, IconEye, IconCheck, IconFileText } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
+import { useCurrency } from "../../hooks/useCurrency";
 import { expenseApi, type Expense } from "../../services/api";
 
 interface ExpenseListProps {
@@ -44,6 +45,7 @@ export default function ExpenseList({
   selectedExpenseId,
   compact = false,
 }: ExpenseListProps) {
+  const { formatAmount } = useCurrency();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -227,7 +229,7 @@ export default function ExpenseList({
                         </Badge>
                       </Group>
                       <Text size="xs" c="dimmed">
-                        {expense.category} • ${expense.total.toFixed(2)}
+                        {expense.category} • {formatAmount(expense.total)}
                       </Text>
                     </div>
                   </Group>
@@ -332,7 +334,7 @@ export default function ExpenseList({
               </Avatar>
               <div>
                 <Text size="xl" fw={700}>
-                  ${summary.totalAmount.toFixed(2)}
+                  {formatAmount(summary.totalAmount)}
                 </Text>
                 <Text size="sm" c="dimmed">
                   Total Amount
@@ -440,7 +442,7 @@ export default function ExpenseList({
                       <Text size="sm">{expense.vendor?.name || "-"}</Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text fw={500}>${expense.total.toFixed(2)}</Text>
+                      <Text fw={500}>{formatAmount(expense.total)}</Text>
                     </Table.Td>
                     <Table.Td>
                       <Text size="sm">{PAYMENT_METHOD_LABELS[expense.paymentMethod]}</Text>

@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { Invoice, Customer, InvoiceItem } from "../../services/api";
+import { formatCurrency } from "../../utils/currency";
 
 // PDF Styles
 const styles = StyleSheet.create({
@@ -268,10 +269,10 @@ const InvoicePDF = ({ invoice, customer }: InvoicePDFProps) => (
               <Text style={styles.tableCellText}>{item.quantity}</Text>
             </View>
             <View style={[styles.tableCol, styles.tableColNarrow]}>
-              <Text style={styles.tableCellText}>${item.unitPrice.toFixed(2)}</Text>
+              <Text style={styles.tableCellText}>{formatCurrency(item.unitPrice)}</Text>
             </View>
             <View style={[styles.tableCol, styles.tableColNarrow]}>
-              <Text style={styles.tableCellText}>${item.total.toFixed(2)}</Text>
+              <Text style={styles.tableCellText}>{formatCurrency(item.total)}</Text>
             </View>
           </View>
         ))}
@@ -281,11 +282,11 @@ const InvoicePDF = ({ invoice, customer }: InvoicePDFProps) => (
       <View style={styles.totalsSection}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Subtotal:</Text>
-          <Text style={styles.totalValue}>${invoice.subtotal.toFixed(2)}</Text>
+          <Text style={styles.totalValue}>{formatCurrency(invoice.subtotal)}</Text>
         </View>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Tax ({invoice.taxRate}%):</Text>
-          <Text style={styles.totalValue}>${invoice.taxAmount.toFixed(2)}</Text>
+          <Text style={styles.totalValue}>{formatCurrency(invoice.taxAmount)}</Text>
         </View>
         <View
           style={[
@@ -293,20 +294,22 @@ const InvoicePDF = ({ invoice, customer }: InvoicePDFProps) => (
             { borderTopWidth: 1, borderTopColor: "#e5e7eb", paddingTop: 5 },
           ]}>
           <Text style={[styles.totalLabel, styles.grandTotal]}>Total:</Text>
-          <Text style={[styles.totalValue, styles.grandTotal]}>${invoice.total.toFixed(2)}</Text>
+          <Text style={[styles.totalValue, styles.grandTotal]}>
+            {formatCurrency(invoice.total)}
+          </Text>
         </View>
         {invoice.paidAmount && invoice.paidAmount > 0 && (
           <>
             <View style={styles.totalRow}>
               <Text style={[styles.totalLabel, { color: "#059669" }]}>Paid:</Text>
               <Text style={[styles.totalValue, { color: "#059669" }]}>
-                ${invoice.paidAmount.toFixed(2)}
+                {formatCurrency(invoice.paidAmount)}
               </Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Balance Due:</Text>
               <Text style={styles.totalValue}>
-                ${(invoice.total - invoice.paidAmount).toFixed(2)}
+                {formatCurrency(invoice.total - invoice.paidAmount)}
               </Text>
             </View>
           </>

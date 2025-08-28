@@ -6,6 +6,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconReceipt } from "@tabler/icons-react";
 import Decimal from "decimal.js";
+import { useCurrency } from "../../hooks/useCurrency";
 // prettier-ignore
 import { expenseApi, vendorApi, expenseCategoryApi, type Expense, type CreateExpenseData, type Vendor, type ExpenseCategory } from "../../services/api";
 
@@ -49,6 +50,7 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export default function ExpenseForm({ opened, onClose, onSuccess, expense }: ExpenseFormProps) {
+  const { formatAmount, getCurrencySymbol } = useCurrency();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -276,6 +278,7 @@ export default function ExpenseForm({ opened, onClose, onSuccess, expense }: Exp
                 min={0}
                 step={0.01}
                 decimalScale={2}
+                prefix={getCurrencySymbol()}
                 required
                 {...form.getInputProps("amount")}
               />
@@ -287,6 +290,7 @@ export default function ExpenseForm({ opened, onClose, onSuccess, expense }: Exp
                 min={0}
                 step={0.01}
                 decimalScale={2}
+                prefix={getCurrencySymbol()}
                 {...form.getInputProps("taxAmount")}
               />
             </Grid.Col>
@@ -296,11 +300,11 @@ export default function ExpenseForm({ opened, onClose, onSuccess, expense }: Exp
           <Paper p="md" withBorder>
             <Group justify="space-between">
               <Text>Amount:</Text>
-              <Text>${form.values.amount.toFixed(2)}</Text>
+              <Text>{formatAmount(form.values.amount)}</Text>
             </Group>
             <Group justify="space-between">
               <Text>Tax:</Text>
-              <Text>${form.values.taxAmount.toFixed(2)}</Text>
+              <Text>{formatAmount(form.values.taxAmount)}</Text>
             </Group>
             <Divider my="xs" />
             <Group justify="space-between">
@@ -308,7 +312,7 @@ export default function ExpenseForm({ opened, onClose, onSuccess, expense }: Exp
                 Total:
               </Text>
               <Text fw={500} size="lg">
-                ${total.toFixed(2)}
+                {formatAmount(total)}
               </Text>
             </Group>
           </Paper>

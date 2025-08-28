@@ -5,6 +5,7 @@ import { Table, Group, Text, ActionIcon, Badge, ScrollArea, TextInput, Button, P
 import { IconSearch, IconPlus, IconEdit, IconTrash, IconDots, IconFileText, IconCalendar, IconCurrencyDollar, IconFilter, IconEye, IconCheck } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
+import { useCurrency } from "../../hooks/useCurrency";
 import { billApi, type Bill } from "../../services/api";
 
 interface BillListProps {
@@ -38,6 +39,7 @@ export default function BillList({
   selectedBillId,
   compact = false,
 }: BillListProps) {
+  const { formatAmount } = useCurrency();
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -206,7 +208,7 @@ export default function BillList({
                         </Badge>
                       </Group>
                       <Text size="xs" c="dimmed">
-                        {bill.vendor?.company} • ${bill.total.toFixed(2)}
+                        {bill.vendor?.company} • {formatAmount(bill.total)}
                       </Text>
                     </div>
                   </Group>
@@ -311,7 +313,7 @@ export default function BillList({
               </Avatar>
               <div>
                 <Text size="xl" fw={700}>
-                  ${summary.totalAmount.toFixed(2)}
+                  {formatAmount(summary.totalAmount)}
                 </Text>
                 <Text size="sm" c="dimmed">
                   Total Amount
@@ -410,7 +412,7 @@ export default function BillList({
                       <Text size="sm">{new Date(bill.dueDate).toLocaleDateString()}</Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text fw={500}>${bill.total.toFixed(2)}</Text>
+                      <Text fw={500}>{formatAmount(bill.total)}</Text>
                     </Table.Td>
                     <Table.Td>
                       <Badge color={STATUS_COLORS[bill.status]} variant="light">

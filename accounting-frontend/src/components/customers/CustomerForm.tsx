@@ -5,7 +5,7 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
 // Type definition
-interface CustomerFormData {
+export interface CustomerFormData {
   name: string;
   email: string;
   phone: string;
@@ -43,6 +43,7 @@ interface CustomerFormProps {
   onSubmit: (data: CustomerFormData) => void;
   onCancel: () => void;
   loading?: boolean;
+  isModal?: boolean;
 }
 
 const countryOptions = [
@@ -57,7 +58,13 @@ const countryOptions = [
   { value: "Other", label: "Other" },
 ];
 
-export function CustomerForm({ customer, onSubmit, onCancel, loading = false }: CustomerFormProps) {
+export function CustomerForm({
+  customer,
+  onSubmit,
+  onCancel,
+  loading = false,
+  isModal = false,
+}: CustomerFormProps) {
   const form = useForm<CustomerFormData>({
     validate: {
       name: (value) => {
@@ -94,14 +101,16 @@ export function CustomerForm({ customer, onSubmit, onCancel, loading = false }: 
   const handleSubmit = (values: CustomerFormData) => {
     try {
       onSubmit(values);
-      notifications.show({
-        title: customer ? "Customer Updated" : "Customer Created",
-        message: customer
-          ? "Customer information has been updated successfully"
-          : "New customer has been created successfully",
-        color: "green",
-        icon: <IconCheck size={16} />,
-      });
+      if (!isModal) {
+        notifications.show({
+          title: customer ? "Customer Updated" : "Customer Created",
+          message: customer
+            ? "Customer information has been updated successfully"
+            : "New customer has been created successfully",
+          color: "green",
+          icon: <IconCheck size={16} />,
+        });
+      }
     } catch {
       notifications.show({
         title: "Error",
@@ -113,7 +122,11 @@ export function CustomerForm({ customer, onSubmit, onCancel, loading = false }: 
   };
 
   return (
-    <Paper shadow="xs" radius="md" p="md" withBorder>
+    <Paper
+      shadow={isModal ? "none" : "xs"}
+      radius="md"
+      p={isModal ? 0 : "md"}
+      withBorder={!isModal}>
       <Title order={3} mb="lg">
         {customer ? "Edit Customer" : "Add New Customer"}
       </Title>

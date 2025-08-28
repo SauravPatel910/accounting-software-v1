@@ -11,8 +11,11 @@ import {
   IconTrash,
   IconCalculator,
   IconPackage,
+  IconUserPlus,
+  IconShoppingCart,
 } from "@tabler/icons-react";
 import Decimal from "decimal.js";
+import { useCurrency } from "../../hooks/useCurrency";
 import type {
   Invoice,
   Customer,
@@ -20,13 +23,16 @@ import type {
   CreateInvoiceData,
   Product,
 } from "../../services/api";
-import { ProductList } from "../products";
+import { ProductList, ProductFormStandalone, type ProductFormData } from "../products";
+import { CustomerForm, type CustomerFormData } from "../customers";
 
 interface InvoiceFormProps {
   invoice?: Partial<Invoice>;
   customers: Customer[];
   onSubmit: (data: CreateInvoiceData) => void;
   onCancel: () => void;
+  onCustomerCreate?: (customer: CustomerFormData) => Promise<Customer>;
+  onProductCreate?: (product: ProductFormData) => Promise<Product>;
   loading?: boolean;
 }
 
@@ -61,8 +67,11 @@ export function InvoiceForm({
   customers = mockCustomers,
   onSubmit,
   onCancel,
+  onCustomerCreate,
+  onProductCreate,
   loading = false,
 }: InvoiceFormProps) {
+  const { getCurrencySymbol, formatAmount } = useCurrency();
   const [items, setItems] = useState<InvoiceItem[]>(
     invoice?.items || [
       {
@@ -76,6 +85,10 @@ export function InvoiceForm({
   );
 
   const [productSelectionModal, setProductSelectionModal] = useState(false);
+  const [customerFormModal, setCustomerFormModal] = useState(false);
+  const [productFormModal, setProductFormModal] = useState(false);
+  const [customerLoading, setCustomerLoading] = useState(false);
+  const [productLoading, setProductLoading] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number>(-1);
 
   const form = useForm<CreateInvoiceData>({
@@ -84,7 +97,7 @@ export function InvoiceForm({
       invoiceNumber: (value: string) => (!value ? "Invoice number is required" : null),
       issueDate: (value: Date) => (!value ? "Issue date is required" : null),
       dueDate: (value: Date) => (!value ? "Due date is required" : null),
-      description: (value: string) => (!value ? "Description is required" : null),
+      // description: (value: string) => (!value ? "Description is required" : null),
     },
     initialValues: {
       customerId: invoice?.customerId || "",
@@ -249,11 +262,137 @@ export function InvoiceForm({
     });
   };
 
+  // Handle customer creation
+  const handleCustomerCreate = async (customerData: CustomerFormData) => {
+    if (!onCustomerCreate) return;
+
+    setCustomerLoading(true);
+    try {
+      const newCustomer = await onCustomerCreate(customerData);
+
+      // Close the modal
+      setCustomerFormModal(false);
+
+      // Auto-select the newly created customer
+      form.setFieldValue("customerId", newCustomer.id);
+
+      notifications.show({
+        title: "Customer Created",
+        message: "New customer created and selected for this invoice",
+        color: "green",
+        icon: <IconCheck size={16} />,
+      });
+    } catch {
+      notifications.show({
+        title: "Error",
+        message: "Failed to create customer. Please try again.",
+        color: "red",
+        icon: <IconX size={16} />,
+      });
+    } finally {
+      setCustomerLoading(false);
+    }
+  };
+
+  // Handle product creation
+  const handleProductCreate = async (productData: ProductFormData) => {
+    if (!onProductCreate) return;
+
+    setProductLoading(true);
+    try {
+      const newProduct = await onProductCreate(productData);
+
+      // Close the modal
+      setProductFormModal(false);
+
+      // Create a new line item with the created product
+      const productItem: InvoiceItem = {
+        id: Date.now().toString(),
+        productId: newProduct.id,
+        product: newProduct,
+        description: `${newProduct.brand} ${newProduct.name} - ${newProduct.size}${
+          newProduct.pattern ? ` (${newProduct.pattern})` : ""
+        }`,
+        quantity: 1,
+        unitPrice: newProduct.price,
+        total: newProduct.price,
+      };
+
+      const newItems = [...items, productItem];
+      setItems(newItems);
+
+      const totals = calculateTotals(newItems, form.values.taxRate);
+      form.setValues({
+        ...form.values,
+        ...totals,
+        items: newItems,
+      });
+
+      notifications.show({
+        title: "Product Created",
+        message: "New product created and added to invoice",
+        color: "green",
+        icon: <IconCheck size={16} />,
+      });
+    } catch {
+      notifications.show({
+        title: "Error",
+        message: "Failed to create product. Please try again.",
+        color: "red",
+        icon: <IconX size={16} />,
+      });
+    } finally {
+      setProductLoading(false);
+    }
+  };
+
+  // Validation function to check if invoice is valid for submission
+  const isInvoiceValid = () => {
+    const validItems = items.filter(
+      (item) => item.description.trim().length > 0 && item.quantity > 0 && item.unitPrice > 0
+    );
+    const totals = calculateTotals(items, form.values.taxRate);
+
+    return validItems.length > 0 && totals.total > 0;
+  };
+
+  // Update customer options when customers list changes
+  const customerOptions = customers.map((customer) => ({
+    value: customer.id,
+    label: `${customer.name} - ${customer.company}`,
+  }));
+
   // Get selected customer details
   const selectedCustomer = customers.find((c) => c.id === form.values.customerId);
 
   const handleSubmit = (values: CreateInvoiceData) => {
     try {
+      // Validate that there's at least one item with a description
+      const validItems = items.filter((item) => item.description.trim().length > 0);
+
+      if (validItems.length === 0) {
+        notifications.show({
+          title: "Validation Error",
+          message: "Please add at least one item with a description to the invoice",
+          color: "red",
+          icon: <IconX size={16} />,
+        });
+        return;
+      }
+
+      // Calculate totals and validate amount
+      const totals = calculateTotals(items, values.taxRate);
+
+      if (totals.total <= 0) {
+        notifications.show({
+          title: "Validation Error",
+          message: "Invoice total must be greater than 0",
+          color: "red",
+          icon: <IconX size={16} />,
+        });
+        return;
+      }
+
       const submissionData = {
         ...values,
         items: items.map((item) => ({
@@ -262,7 +401,7 @@ export function InvoiceForm({
           unitPrice: item.unitPrice,
           total: item.total,
         })),
-        ...calculateTotals(items, values.taxRate),
+        ...totals,
       };
 
       onSubmit(submissionData);
@@ -284,11 +423,6 @@ export function InvoiceForm({
     }
   };
 
-  const customerOptions = customers.map((customer) => ({
-    value: customer.id,
-    label: `${customer.name} - ${customer.company}`,
-  }));
-
   return (
     <>
       <Paper shadow="xs" radius="md" p="md" withBorder>
@@ -305,14 +439,31 @@ export function InvoiceForm({
               </Title>
               <Grid>
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Select
-                    label="Customer"
-                    placeholder="Select a customer"
-                    data={customerOptions}
-                    required
-                    searchable
-                    {...form.getInputProps("customerId")}
-                  />
+                  <Box>
+                    <Group gap="xs" mb="xs">
+                      <Text size="sm" fw={500}>
+                        Customer
+                      </Text>
+                      <Text c="red" size="sm">
+                        *
+                      </Text>
+                      <Button
+                        variant="subtle"
+                        size="xs"
+                        leftSection={<IconUserPlus size={14} />}
+                        onClick={() => setCustomerFormModal(true)}
+                        disabled={!onCustomerCreate}>
+                        Add Customer
+                      </Button>
+                    </Group>
+                    <Select
+                      placeholder="Select a customer"
+                      data={customerOptions}
+                      required
+                      searchable
+                      {...form.getInputProps("customerId")}
+                    />
+                  </Box>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
                   <TextInput
@@ -342,7 +493,6 @@ export function InvoiceForm({
                   <TextInput
                     label="Description"
                     placeholder="Brief description of services/products"
-                    required
                     {...form.getInputProps("description")}
                   />
                 </Grid.Col>
@@ -396,6 +546,15 @@ export function InvoiceForm({
                     Add Product
                   </Button>
                   <Button
+                    leftSection={<IconShoppingCart size={16} />}
+                    variant="filled"
+                    color="green"
+                    size="sm"
+                    onClick={() => setProductFormModal(true)}
+                    disabled={!onProductCreate}>
+                    Create Product
+                  </Button>
+                  <Button
                     leftSection={<IconPlus size={16} />}
                     variant="light"
                     size="sm"
@@ -437,6 +596,17 @@ export function InvoiceForm({
                             onChange={(e) => updateItem(index, "description", e.target.value)}
                             size="sm"
                             variant="unstyled"
+                            error={item.description.trim().length === 0}
+                            styles={{
+                              input: {
+                                borderColor:
+                                  item.description.trim().length === 0 ? "#fa5252" : undefined,
+                                borderWidth:
+                                  item.description.trim().length === 0 ? "1px" : undefined,
+                                borderStyle:
+                                  item.description.trim().length === 0 ? "solid" : undefined,
+                              },
+                            }}
                           />
                           {item.product && (
                             <Text size="xs" c="blue">
@@ -448,8 +618,8 @@ export function InvoiceForm({
                           <NumberInput
                             placeholder="0"
                             value={item.quantity}
-                            onChange={(value) => updateItem(index, "quantity", value || 0)}
-                            min={0}
+                            onChange={(value) => updateItem(index, "quantity", value || 1)}
+                            min={1}
                             step={1}
                             size="sm"
                             variant="unstyled"
@@ -460,18 +630,18 @@ export function InvoiceForm({
                             placeholder="0.00"
                             value={item.unitPrice}
                             onChange={(value) => updateItem(index, "unitPrice", value || 0)}
-                            min={0}
+                            min={0.01}
                             step={0.01}
                             decimalScale={2}
                             fixedDecimalScale
-                            prefix="$"
+                            prefix={getCurrencySymbol()}
                             size="sm"
                             variant="unstyled"
                           />
                         </Table.Td>
                         <Table.Td>
                           <Text size="sm" fw={500}>
-                            ${item.total.toFixed(2)}
+                            {formatAmount(item.total)}
                           </Text>
                         </Table.Td>
                         <Table.Td>
@@ -507,7 +677,7 @@ export function InvoiceForm({
                       <Group justify="space-between">
                         <Text size="sm">Subtotal:</Text>
                         <Text size="sm" fw={500}>
-                          ${calculateTotals(items, form.values.taxRate).subtotal.toFixed(2)}
+                          {formatAmount(calculateTotals(items, form.values.taxRate).subtotal)}
                         </Text>
                       </Group>
 
@@ -524,7 +694,7 @@ export function InvoiceForm({
                           style={{ width: "120px" }}
                         />
                         <Text size="sm" fw={500}>
-                          ${calculateTotals(items, form.values.taxRate).taxAmount.toFixed(2)}
+                          {formatAmount(calculateTotals(items, form.values.taxRate).taxAmount)}
                         </Text>
                       </Group>
 
@@ -535,7 +705,7 @@ export function InvoiceForm({
                           Total:
                         </Text>
                         <Text size="lg" fw={700} c="green">
-                          ${calculateTotals(items, form.values.taxRate).total.toFixed(2)}
+                          {formatAmount(calculateTotals(items, form.values.taxRate).total)}
                         </Text>
                       </Group>
                     </Stack>
@@ -544,12 +714,45 @@ export function InvoiceForm({
               </Paper>
             </Box>
 
+            {/* Validation Feedback */}
+            {!isInvoiceValid() && (
+              <Box>
+                <Paper withBorder radius="md" p="sm" bg="red.0">
+                  <Text size="sm" c="red" fw={500}>
+                    ⚠️ Invoice cannot be created:
+                  </Text>
+                  <Stack gap="xs" mt="xs">
+                    {items.filter(
+                      (item) =>
+                        item.description.trim().length > 0 &&
+                        item.quantity > 0 &&
+                        item.unitPrice > 0
+                    ).length === 0 && (
+                      <Text size="xs" c="red">
+                        • At least one complete item is required (description, quantity &gt; 0, unit
+                        price &gt; 0)
+                      </Text>
+                    )}
+                    {calculateTotals(items, form.values.taxRate).total <= 0 && (
+                      <Text size="xs" c="red">
+                        • Total amount must be greater than {formatAmount(0)}
+                      </Text>
+                    )}
+                  </Stack>
+                </Paper>
+              </Box>
+            )}
+
             {/* Form Actions */}
             <Group justify="flex-end" mt="xl">
               <Button variant="light" onClick={onCancel} disabled={loading}>
                 Cancel
               </Button>
-              <Button type="submit" loading={loading} leftSection={<IconCalculator size={16} />}>
+              <Button
+                type="submit"
+                loading={loading}
+                disabled={!isInvoiceValid()}
+                leftSection={<IconCalculator size={16} />}>
                 {invoice ? "Update Invoice" : "Create Invoice"}
               </Button>
             </Group>
@@ -565,6 +768,38 @@ export function InvoiceForm({
         size="xl"
         padding="md">
         <ProductList onProductSelect={handleProductSelect} selectionMode={true} />
+      </Modal>
+
+      {/* Customer Creation Modal */}
+      <Modal
+        opened={customerFormModal}
+        onClose={() => setCustomerFormModal(false)}
+        title="Add New Customer"
+        size="lg"
+        padding="md"
+        closeOnClickOutside={false}>
+        <CustomerForm
+          onSubmit={handleCustomerCreate}
+          onCancel={() => setCustomerFormModal(false)}
+          loading={customerLoading}
+          isModal={true}
+        />
+      </Modal>
+
+      {/* Product Creation Modal */}
+      <Modal
+        opened={productFormModal}
+        onClose={() => setProductFormModal(false)}
+        title="Create New Product"
+        size="xl"
+        padding="md"
+        closeOnClickOutside={false}>
+        <ProductFormStandalone
+          onSubmit={handleProductCreate}
+          onCancel={() => setProductFormModal(false)}
+          loading={productLoading}
+          isModal={true}
+        />
       </Modal>
     </>
   );

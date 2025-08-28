@@ -6,6 +6,7 @@ import { IconPlus, IconSearch, IconDotsVertical, IconEdit, IconTrash } from "@ta
 import { notifications } from "@mantine/notifications";
 import { productApi, type Product } from "../../services/api";
 import ProductForm from "./ProductForm";
+import { useCurrency } from "../../hooks/useCurrency";
 
 // Mock data for products (this would come from API)
 const mockProductsData: Product[] = [
@@ -18,8 +19,8 @@ const mockProductsData: Product[] = [
     loadIndex: "94",
     speedRating: "Y",
     type: "car",
-    price: 180.0,
-    costPrice: 140.0,
+    price: 15000.0,
+    costPrice: 12000.0,
     stock: 25,
     minStock: 5,
     sku: "MICH-PS4-225-45-17",
@@ -38,8 +39,8 @@ const mockProductsData: Product[] = [
     loadIndex: "91",
     speedRating: "V",
     type: "car",
-    price: 140.0,
-    costPrice: 110.0,
+    price: 11500.0,
+    costPrice: 9000.0,
     stock: 40,
     minStock: 10,
     sku: "MICH-CC2-205-55-16",
@@ -58,8 +59,8 @@ const mockProductsData: Product[] = [
     loadIndex: "91",
     speedRating: "H",
     type: "car",
-    price: 95.0,
-    costPrice: 75.0,
+    price: 7800.0,
+    costPrice: 6200.0,
     stock: 60,
     minStock: 15,
     sku: "CONT-CPC6-195-65-15",
@@ -78,8 +79,8 @@ const mockProductsData: Product[] = [
     loadIndex: "112",
     speedRating: "H",
     type: "truck",
-    price: 220.0,
-    costPrice: 180.0,
+    price: 18500.0,
+    costPrice: 15000.0,
     stock: 15,
     minStock: 3,
     sku: "YOKO-GAT-265-70-16",
@@ -98,8 +99,8 @@ const mockProductsData: Product[] = [
     loadIndex: "58",
     speedRating: "W",
     type: "motorcycle",
-    price: 160.0,
-    costPrice: 130.0,
+    price: 13200.0,
+    costPrice: 10800.0,
     stock: 8,
     minStock: 2,
     sku: "BRID-BST-120-70-17",
@@ -123,6 +124,7 @@ export function ProductList({ onProductSelect, selectionMode = false }: ProductL
   const [editModalOpened, setEditModalOpened] = useState(false);
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const { formatAmount } = useCurrency();
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -365,10 +367,10 @@ export function ProductList({ onProductSelect, selectionMode = false }: ProductL
                     </Badge>
                   </Table.Td>
                   <Table.Td>
-                    <Text fw={500}>${product.price.toFixed(2)}</Text>
+                    <Text fw={500}>{formatAmount(product.price)}</Text>
                     {product.costPrice && (
                       <Text size="sm" c="dimmed">
-                        Cost: ${product.costPrice.toFixed(2)}
+                        Cost: {formatAmount(product.costPrice)}
                       </Text>
                     )}
                   </Table.Td>

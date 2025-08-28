@@ -5,6 +5,7 @@ import { IconDownload, IconPrinter, IconShare, IconCalendar, IconTrendingUp, Ico
 import { useState } from "react";
 import { motion } from "motion/react";
 import { DatePickerInput } from "@mantine/dates";
+import { useCurrency } from "../../hooks/useCurrency";
 
 interface ProfitLossItem {
   id: string;
@@ -205,6 +206,7 @@ const mockProfitLossData: ProfitLossItem[] = [
 ];
 
 export function ProfitLoss() {
+  const { getCurrencySymbol } = useCurrency();
   const [data] = useState<ProfitLossItem[]>(mockProfitLossData);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     new Date(new Date().getFullYear(), new Date().getMonth(), 1), // First day of current month
@@ -223,7 +225,7 @@ export function ProfitLoss() {
   const formatAmount = (amount: number, isNegative = false) => (
     <NumberFormatter
       value={Math.abs(amount)}
-      prefix={isNegative ? "($" : "$"}
+      prefix={isNegative ? `(${getCurrencySymbol()}` : getCurrencySymbol()}
       suffix={isNegative ? ")" : ""}
       thousandSeparator
       decimalScale={2}
@@ -297,7 +299,7 @@ export function ProfitLoss() {
                 <Text size="xl" fw={700} c="green">
                   <NumberFormatter
                     value={totalRevenue}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />
@@ -316,7 +318,7 @@ export function ProfitLoss() {
                 <Text size="xl" fw={700} c="blue">
                   <NumberFormatter
                     value={grossProfit}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />
@@ -461,7 +463,8 @@ export function ProfitLoss() {
                       <>
                         <Table.Td ta="right">
                           <Text size="sm" c="dimmed">
-                            ${(item.amount * 0.85).toLocaleString()}
+                            {getCurrencySymbol()}
+                            {(item.amount * 0.85).toLocaleString()}
                           </Text>
                         </Table.Td>
                         <Table.Td ta="right">

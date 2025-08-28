@@ -5,6 +5,7 @@ import { IconEdit, IconTrash, IconEye, IconPlus, IconSearch, IconBuildingBank, I
 import { useState } from "react";
 import { motion } from "motion/react";
 import Decimal from "decimal.js";
+import { useCurrency } from "../../hooks/useCurrency";
 
 interface BankAccount {
   id: string;
@@ -79,6 +80,7 @@ const accountTypeConfig = {
 };
 
 export function BankAccountList() {
+  const { getCurrencySymbol } = useCurrency();
   const [accounts, setAccounts] = useState<BankAccount[]>(mockBankAccounts);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -126,7 +128,7 @@ export function BankAccountList() {
     return (
       <NumberFormatter
         value={displayBalance}
-        prefix="$"
+        prefix={getCurrencySymbol()}
         thousandSeparator
         decimalScale={2}
         style={{
@@ -158,7 +160,7 @@ export function BankAccountList() {
                 <Text size="xl" fw={700} c="green">
                   <NumberFormatter
                     value={totalBalance.toNumber()}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />
@@ -177,7 +179,7 @@ export function BankAccountList() {
                 <Text size="xl" fw={700} c="red">
                   <NumberFormatter
                     value={totalCreditBalance.toNumber()}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />
@@ -196,7 +198,7 @@ export function BankAccountList() {
                 <Text size="xl" fw={700} c="blue">
                   <NumberFormatter
                     value={totalBalance.minus(totalCreditBalance).toNumber()}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />

@@ -4,6 +4,7 @@ import { Paper, Title, Text, Group, Stack, Table, Button, Badge, Divider, Grid, 
 import { notifications } from "@mantine/notifications";
 // prettier-ignore
 import { IconPrinter, IconDownload, IconMail, IconEdit, IconCopy, IconCheck, IconDots, IconX, IconSend, IconCreditCard } from "@tabler/icons-react";
+import { useCurrency } from "../../hooks/useCurrency";
 import type { Invoice, EmailInvoiceData } from "../../services/api";
 
 interface InvoiceDetailProps {
@@ -49,6 +50,8 @@ export function InvoiceDetail({
       invoice.invoiceNumber
     }.\n\nThank you for your business!\n\nBest regards,\n${COMPANY_INFO.name}`,
   });
+
+  const { formatAmount } = useCurrency();
 
   // Early return if no customer data
   if (!invoice.customer) {
@@ -387,9 +390,9 @@ export function InvoiceDetail({
                       <Text fw={500}>{item.description}</Text>
                     </Table.Td>
                     <Table.Td ta="center">{item.quantity}</Table.Td>
-                    <Table.Td ta="right">${item.unitPrice.toFixed(2)}</Table.Td>
+                    <Table.Td ta="right">{formatAmount(item.unitPrice)}</Table.Td>
                     <Table.Td ta="right" fw={500}>
-                      ${item.total.toFixed(2)}
+                      {formatAmount(item.total)}
                     </Table.Td>
                   </Table.Tr>
                 ))}
@@ -417,11 +420,11 @@ export function InvoiceDetail({
               <Stack gap="sm">
                 <Group justify="space-between">
                   <Text>Subtotal:</Text>
-                  <Text fw={500}>${invoice.subtotal.toFixed(2)}</Text>
+                  <Text fw={500}>{formatAmount(invoice.subtotal)}</Text>
                 </Group>
                 <Group justify="space-between">
                   <Text>Tax ({invoice.taxRate}%):</Text>
-                  <Text fw={500}>${invoice.taxAmount.toFixed(2)}</Text>
+                  <Text fw={500}>{formatAmount(invoice.taxAmount)}</Text>
                 </Group>
                 <Divider />
                 <Group justify="space-between">
@@ -429,7 +432,7 @@ export function InvoiceDetail({
                     Total:
                   </Text>
                   <Text size="lg" fw={700} c="green">
-                    ${invoice.total.toFixed(2)}
+                    {formatAmount(invoice.total)}
                   </Text>
                 </Group>
                 {invoice.paidAmount && invoice.paidAmount > 0 && (
@@ -437,13 +440,13 @@ export function InvoiceDetail({
                     <Group justify="space-between">
                       <Text c="dimmed">Paid Amount:</Text>
                       <Text c="green" fw={500}>
-                        ${invoice.paidAmount.toFixed(2)}
+                        {formatAmount(invoice.paidAmount)}
                       </Text>
                     </Group>
                     <Group justify="space-between">
                       <Text fw={500}>Balance Due:</Text>
                       <Text fw={500} c={invoice.total - invoice.paidAmount > 0 ? "red" : "green"}>
-                        ${(invoice.total - invoice.paidAmount).toFixed(2)}
+                        {formatAmount(invoice.total - invoice.paidAmount)}
                       </Text>
                     </Group>
                   </>
@@ -516,7 +519,7 @@ export function InvoiceDetail({
         size="sm">
         <Stack gap="md">
           <Text size="sm">
-            Are you sure you want to mark this invoice as paid for ${invoice.total.toFixed(2)}?
+            Are you sure you want to mark this invoice as paid for {formatAmount(invoice.total)}?
           </Text>
 
           <Group justify="flex-end" mt="md">

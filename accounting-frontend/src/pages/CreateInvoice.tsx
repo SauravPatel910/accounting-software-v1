@@ -4,7 +4,16 @@ import { Box, Text, Button, Group } from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { InvoiceForm } from "../components/invoices";
-import type { Customer, CreateInvoiceData, Invoice } from "../services/api";
+import type {
+  Customer,
+  CreateInvoiceData,
+  Invoice,
+  CreateCustomerData,
+  Product,
+  CreateProductData,
+} from "../services/api";
+import type { CustomerFormData } from "../components/customers";
+import type { ProductFormData } from "../components/products";
 
 // Mock data for customers (this would come from API)
 const mockCustomers: Customer[] = [
@@ -52,21 +61,21 @@ const mockInvoices: Invoice[] = [
         productId: "PROD-001",
         description: "Michelin Pilot Sport 4 - 225/45R17 (Summer Performance)",
         quantity: 4,
-        unitPrice: 180.0,
-        total: 720.0,
+        unitPrice: 15000.0,
+        total: 60000.0,
       },
       {
         id: "item-2",
         description: "Wheel Balancing Service",
         quantity: 4,
-        unitPrice: 15.0,
-        total: 60.0,
+        unitPrice: 1200.0,
+        total: 4800.0,
       },
     ],
-    subtotal: 780.0,
+    subtotal: 64800.0,
     taxRate: 8.5,
-    taxAmount: 66.3,
-    total: 846.3,
+    taxAmount: 5508.0,
+    total: 70308.0,
     createdAt: new Date("2024-01-15"),
     updatedAt: new Date("2024-01-15"),
   },
@@ -77,6 +86,7 @@ export function CreateInvoice() {
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
 
   const isEditMode = Boolean(id);
 
@@ -126,6 +136,99 @@ export function CreateInvoice() {
     }
   };
 
+  // Handle customer creation
+  const handleCustomerCreate = async (customerFormData: CustomerFormData): Promise<Customer> => {
+    try {
+      // Map CustomerFormData to CreateCustomerData
+      const customerData: CreateCustomerData = {
+        name: customerFormData.name,
+        company: customerFormData.company,
+        email: customerFormData.email,
+        phone: customerFormData.phone,
+        address: customerFormData.address,
+        city: customerFormData.city,
+        state: customerFormData.state,
+        zipCode: customerFormData.postalCode,
+        country: customerFormData.country,
+        taxId: undefined, // Not captured in the form, can be added later
+      };
+
+      // TODO: Replace with actual API call
+      const newCustomer: Customer = {
+        id: `CUST-${Date.now()}`,
+        name: customerData.name,
+        company: customerData.company,
+        email: customerData.email,
+        phone: customerData.phone || "",
+        address: customerData.address,
+        city: customerData.city,
+        state: customerData.state,
+        zipCode: customerData.zipCode,
+        country: customerData.country,
+        taxId: customerData.taxId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Add to local state (in real app, this would be handled by API response)
+      setCustomers((prev) => [...prev, newCustomer]);
+
+      return newCustomer;
+    } catch {
+      throw new Error("Failed to create customer");
+    }
+  };
+
+  // Handle product creation
+  const handleProductCreate = async (productFormData: ProductFormData): Promise<Product> => {
+    try {
+      // Map ProductFormData to CreateProductData
+      const productData: CreateProductData = {
+        name: productFormData.name,
+        brand: productFormData.brand,
+        size: productFormData.size,
+        pattern: productFormData.pattern || undefined,
+        loadIndex: productFormData.loadIndex || undefined,
+        speedRating: productFormData.speedRating || undefined,
+        type: productFormData.type,
+        price: productFormData.price,
+        costPrice: productFormData.costPrice || undefined,
+        stock: productFormData.stock,
+        minStock: productFormData.minStock || undefined,
+        sku: productFormData.sku,
+        description: productFormData.description || undefined,
+        category: productFormData.category,
+        isActive: productFormData.isActive,
+      };
+
+      // TODO: Replace with actual API call
+      const newProduct: Product = {
+        id: `PROD-${Date.now()}`,
+        name: productData.name,
+        brand: productData.brand,
+        size: productData.size,
+        pattern: productData.pattern,
+        loadIndex: productData.loadIndex,
+        speedRating: productData.speedRating,
+        type: productData.type,
+        price: productData.price,
+        costPrice: productData.costPrice,
+        stock: productData.stock,
+        minStock: productData.minStock,
+        sku: productData.sku,
+        description: productData.description,
+        category: productData.category,
+        isActive: productData.isActive ?? true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      return newProduct;
+    } catch {
+      throw new Error("Failed to create product");
+    }
+  };
+
   return (
     <Box>
       {/* Header */}
@@ -144,9 +247,11 @@ export function CreateInvoice() {
 
       {/* Invoice Form */}
       <InvoiceForm
-        customers={mockCustomers}
+        customers={customers}
         onSubmit={handleInvoiceSubmit}
         onCancel={() => navigate("/invoices")}
+        onCustomerCreate={handleCustomerCreate}
+        onProductCreate={handleProductCreate}
         loading={loading}
         invoice={invoice || undefined}
       />

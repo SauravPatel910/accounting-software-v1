@@ -6,6 +6,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import Decimal from "decimal.js";
+import { useCurrency } from "../../hooks/useCurrency";
 // prettier-ignore
 import { billApi, vendorApi, type Bill, type CreateBillData, type BillItem, type Vendor } from "../../services/api";
 
@@ -28,6 +29,7 @@ interface BillFormData {
 }
 
 export default function BillForm({ opened, onClose, onSuccess, bill }: BillFormProps) {
+  const { formatAmount, getCurrencySymbol } = useCurrency();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(false);
   const isEdit = !!bill;
@@ -303,6 +305,7 @@ export default function BillForm({ opened, onClose, onSuccess, bill }: BillFormP
                           min={0}
                           step={0.01}
                           decimalScale={2}
+                          prefix={getCurrencySymbol()}
                           {...form.getInputProps(`items.${index}.unitPrice`)}
                           onChange={(value) => {
                             form.setFieldValue(
@@ -314,7 +317,7 @@ export default function BillForm({ opened, onClose, onSuccess, bill }: BillFormP
                         />
                       </Table.Td>
                       <Table.Td>
-                        <Text>${item.total.toFixed(2)}</Text>
+                        <Text>{formatAmount(item.total)}</Text>
                       </Table.Td>
                       <Table.Td>
                         <ActionIcon
@@ -350,11 +353,11 @@ export default function BillForm({ opened, onClose, onSuccess, bill }: BillFormP
                 <Stack gap="xs">
                   <Group justify="space-between">
                     <Text>Subtotal:</Text>
-                    <Text>${totals.subtotal.toFixed(2)}</Text>
+                    <Text>{formatAmount(totals.subtotal)}</Text>
                   </Group>
                   <Group justify="space-between">
                     <Text>Tax ({form.values.taxRate}%):</Text>
-                    <Text>${totals.taxAmount.toFixed(2)}</Text>
+                    <Text>{formatAmount(totals.taxAmount)}</Text>
                   </Group>
                   <Divider />
                   <Group justify="space-between">
@@ -362,7 +365,7 @@ export default function BillForm({ opened, onClose, onSuccess, bill }: BillFormP
                       Total:
                     </Text>
                     <Text fw={500} size="lg">
-                      ${totals.total.toFixed(2)}
+                      {formatAmount(totals.total)}
                     </Text>
                   </Group>
                 </Stack>

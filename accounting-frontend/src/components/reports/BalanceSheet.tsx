@@ -5,6 +5,7 @@ import { IconDownload, IconPrinter, IconShare, IconCalendar, IconTrendingUp, Ico
 import { useState } from "react";
 import { motion } from "motion/react";
 import { DatePickerInput } from "@mantine/dates";
+import { useCurrency } from "../../hooks/useCurrency";
 
 interface BalanceSheetItem {
   id: string;
@@ -246,6 +247,7 @@ const mockBalanceSheetData: BalanceSheetItem[] = [
 ];
 
 export function BalanceSheet() {
+  const { getCurrencySymbol } = useCurrency();
   const [data] = useState<BalanceSheetItem[]>(mockBalanceSheetData);
   const [asOfDate, setAsOfDate] = useState<Date | null>(new Date());
   const [comparisonDate, setComparisonDate] = useState<Date | null>(null);
@@ -268,7 +270,7 @@ export function BalanceSheet() {
   const formatAmount = (amount: number, isNegative = false) => (
     <NumberFormatter
       value={Math.abs(amount)}
-      prefix={amount < 0 || isNegative ? "($" : "$"}
+      prefix={amount < 0 || isNegative ? `(${getCurrencySymbol()}` : getCurrencySymbol()}
       suffix={amount < 0 || isNegative ? ")" : ""}
       thousandSeparator
       decimalScale={2}
@@ -375,7 +377,7 @@ export function BalanceSheet() {
                 <Text size="xl" fw={700} c="blue">
                   <NumberFormatter
                     value={totalAssets}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />
@@ -587,7 +589,7 @@ export function BalanceSheet() {
                 <Text fw={600}>
                   <NumberFormatter
                     value={currentAssets - currentLiabilities}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />

@@ -1,19 +1,11 @@
-import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
 // prettier-ignore
-import { Modal, Button, TextInput, Group, Grid, Select, Stack, Title, NumberInput, Textarea, Switch } from "@mantine/core";
+import { Button, TextInput, Group, Grid, Select, Stack, NumberInput, Textarea, Switch, Paper, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { productApi, type Product, type CreateProductData } from "../../services/api";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useCurrency } from "../../hooks/useCurrency";
 
-interface ProductFormProps {
-  opened: boolean;
-  onClose: () => void;
-  onSuccess?: () => void;
-  product?: Product;
-}
-
-interface ProductFormData {
+export interface ProductFormData {
   name: string;
   brand: string;
   size: string;
@@ -29,6 +21,13 @@ interface ProductFormData {
   description: string;
   category: string;
   isActive: boolean;
+}
+
+interface ProductFormStandaloneProps {
+  onSubmit: (data: ProductFormData) => void;
+  onCancel: () => void;
+  loading?: boolean;
+  isModal?: boolean;
 }
 
 const tyreTypes = [
@@ -48,11 +47,13 @@ const tyreCategories = [
   { value: "commercial", label: "Commercial Tyres" },
 ];
 
-export default function ProductForm({ opened, onClose, onSuccess, product }: ProductFormProps) {
-  const [loading, setLoading] = useState(false);
+export function ProductFormStandalone({
+  onSubmit,
+  onCancel,
+  loading = false,
+  isModal = false,
+}: ProductFormStandaloneProps) {
   const { getCurrencySymbol } = useCurrency();
-
-  const isEdit = Boolean(product);
 
   const form = useForm<ProductFormData>({
     initialValues: {
@@ -83,99 +84,43 @@ export default function ProductForm({ opened, onClose, onSuccess, product }: Pro
     },
   });
 
-  // Reset form when modal opens/closes or product changes
-  useEffect(() => {
-    if (opened && product) {
-      form.setValues({
-        name: product.name,
-        brand: product.brand,
-        size: product.size,
-        pattern: product.pattern || "",
-        loadIndex: product.loadIndex || "",
-        speedRating: product.speedRating || "",
-        type: product.type,
-        price: product.price,
-        costPrice: product.costPrice || 0,
-        stock: product.stock,
-        minStock: product.minStock || 0,
-        sku: product.sku,
-        description: product.description || "",
-        category: product.category,
-        isActive: product.isActive,
-      });
-    } else if (opened && !product) {
-      form.reset();
-    }
-  }, [product, opened]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleSubmit = async (values: ProductFormData) => {
+  const handleSubmit = (values: ProductFormData) => {
     try {
-      setLoading(true);
-
-      const productData: CreateProductData = {
-        name: values.name,
-        brand: values.brand,
-        size: values.size,
-        pattern: values.pattern || undefined,
-        loadIndex: values.loadIndex || undefined,
-        speedRating: values.speedRating || undefined,
-        type: values.type,
-        price: values.price,
-        costPrice: values.costPrice || undefined,
-        stock: values.stock,
-        minStock: values.minStock || undefined,
-        sku: values.sku,
-        description: values.description || undefined,
-        category: values.category,
-        isActive: values.isActive,
-      };
-
-      if (isEdit && product) {
-        await productApi.update(product.id, productData);
+      onSubmit(values);
+      if (!isModal) {
         notifications.show({
-          title: "Success",
-          message: "Product updated successfully",
+          title: "Product Created",
+          message: "New product has been created successfully",
           color: "green",
-        });
-      } else {
-        await productApi.create(productData);
-        notifications.show({
-          title: "Success",
-          message: "Product created successfully",
-          color: "green",
+          icon: <IconCheck size={16} />,
         });
       }
-
-      onSuccess?.();
-      onClose();
-      form.reset();
-    } catch (error) {
-      console.error("Failed to save product:", error);
+    } catch {
       notifications.show({
         title: "Error",
-        message: `Failed to ${isEdit ? "update" : "create"} product`,
+        message: "Something went wrong. Please try again.",
         color: "red",
+        icon: <IconX size={16} />,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title={<Title order={3}>{isEdit ? "Edit Product" : "Create New Product"}</Title>}
-      size="xl"
-      centered
-      zIndex={1000}
-      overlayProps={{
-        backgroundOpacity: 0.55,
-        blur: 3,
-      }}>
+    <Paper
+      shadow={isModal ? "none" : "xs"}
+      radius="md"
+      p={isModal ? 0 : "md"}
+      withBorder={!isModal}>
+      <Title order={3} mb="lg">
+        Create New Product
+      </Title>
+
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
           {/* Basic Information */}
+          <Title order={5} mb="sm" c="dimmed">
+            Basic Information
+          </Title>
           <Grid>
             <Grid.Col span={6}>
               <TextInput
@@ -222,6 +167,9 @@ export default function ProductForm({ opened, onClose, onSuccess, product }: Pro
           </Grid>
 
           {/* Technical Specifications */}
+          <Title order={5} mb="sm" c="dimmed">
+            Technical Specifications
+          </Title>
           <Grid>
             <Grid.Col span={4}>
               <TextInput
@@ -269,6 +217,9 @@ export default function ProductForm({ opened, onClose, onSuccess, product }: Pro
           </Grid>
 
           {/* Pricing and Stock */}
+          <Title order={5} mb="sm" c="dimmed">
+            Pricing and Stock
+          </Title>
           <Grid>
             <Grid.Col span={3}>
               <NumberInput
@@ -324,16 +275,16 @@ export default function ProductForm({ opened, onClose, onSuccess, product }: Pro
           />
 
           {/* Form Actions */}
-          <Group justify="flex-end" mt="md">
-            <Button variant="light" onClick={onClose}>
+          <Group justify="flex-end" mt="xl">
+            <Button variant="light" onClick={onCancel} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" loading={loading}>
-              {isEdit ? "Update Product" : "Create Product"}
+              Create Product
             </Button>
           </Group>
         </Stack>
       </form>
-    </Modal>
+    </Paper>
   );
 }

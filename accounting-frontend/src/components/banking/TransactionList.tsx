@@ -6,6 +6,7 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import Decimal from "decimal.js";
 import { DatePickerInput } from "@mantine/dates";
+import { useCurrency } from "../../hooks/useCurrency";
 
 interface Transaction {
   id: string;
@@ -143,6 +144,7 @@ const typeConfig = {
 };
 
 export function TransactionList() {
+  const { getCurrencySymbol } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -216,7 +218,7 @@ export function TransactionList() {
     return (
       <NumberFormatter
         value={displayAmount}
-        prefix={isNegative ? "-$" : "$"}
+        prefix={isNegative ? `-${getCurrencySymbol()}` : getCurrencySymbol()}
         thousandSeparator
         decimalScale={2}
         style={{
@@ -257,7 +259,7 @@ export function TransactionList() {
                 <Text size="xl" fw={700} c="green">
                   <NumberFormatter
                     value={summary.totalIncome.toNumber()}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />
@@ -276,7 +278,7 @@ export function TransactionList() {
                 <Text size="xl" fw={700} c="red">
                   <NumberFormatter
                     value={summary.totalExpenses.toNumber()}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />
@@ -298,7 +300,7 @@ export function TransactionList() {
                   c={netAmount.greaterThan(0) ? "green" : netAmount.lessThan(0) ? "red" : "gray"}>
                   <NumberFormatter
                     value={netAmount.toNumber()}
-                    prefix="$"
+                    prefix={getCurrencySymbol()}
                     thousandSeparator
                     decimalScale={2}
                   />

@@ -4,6 +4,7 @@ import { Box, TextInput, Button, Group, ActionIcon, Menu, Badge, Text, Paper, Mo
 // prettier-ignore
 import { IconSearch, IconDots, IconEdit, IconTrash, IconEye, IconDownload, IconSend, IconFileInvoice, IconCheck, IconX, IconAlertTriangle, IconClock } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
+import { useCurrency } from "../../hooks/useCurrency";
 import type { Invoice, Customer } from "../../services/api";
 
 // Mock data - in a real app, this would come from an API
@@ -181,6 +182,7 @@ export function InvoiceList({
   onView,
   loading = false,
 }: InvoiceListProps) {
+  const { formatAmount } = useCurrency();
   const [invoices] = useState<Invoice[]>(mockInvoices);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -274,7 +276,7 @@ export function InvoiceList({
                   Total Amount
                 </Text>
                 <Text size="xl" fw={700} c="green">
-                  ${stats.totalAmount.toFixed(2)}
+                  {formatAmount(stats.totalAmount)}
                 </Text>
               </Box>
               <IconClock size={24} style={{ color: "var(--mantine-color-green-6)" }} />
@@ -289,7 +291,7 @@ export function InvoiceList({
                   Paid Amount
                 </Text>
                 <Text size="xl" fw={700} c="green">
-                  ${stats.paidAmount.toFixed(2)}
+                  {formatAmount(stats.paidAmount)}
                 </Text>
               </Box>
               <IconCheck size={24} style={{ color: "var(--mantine-color-green-6)" }} />
@@ -304,7 +306,7 @@ export function InvoiceList({
                   Pending Amount
                 </Text>
                 <Text size="xl" fw={700} c="orange">
-                  ${stats.pendingAmount.toFixed(2)}
+                  {formatAmount(stats.pendingAmount)}
                 </Text>
               </Box>
               <IconAlertTriangle size={24} style={{ color: "var(--mantine-color-orange-6)" }} />
@@ -375,7 +377,7 @@ export function InvoiceList({
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text fw={600}>${invoice.total.toFixed(2)}</Text>
+                      <Text fw={600}>{formatAmount(invoice.total)}</Text>
                     </Table.Td>
                     <Table.Td>
                       <Badge color={config.color} variant="light" leftSection={<Icon size={12} />}>
