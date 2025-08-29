@@ -90,7 +90,7 @@ export default function VendorForm({ opened, onClose, onSuccess, vendor }: Vendo
     } else {
       form.reset();
     }
-  }, [vendor, opened]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [vendor, opened, form]);
 
   const handleSubmit = async (values: CreateVendorData) => {
     try {

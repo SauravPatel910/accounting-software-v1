@@ -84,7 +84,7 @@ export default function BillForm({ opened, onClose, onSuccess, bill }: BillFormP
     } else {
       form.reset();
     }
-  }, [bill, opened]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [bill, opened, form]);
 
   const loadVendors = async () => {
     try {

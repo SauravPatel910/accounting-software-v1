@@ -106,7 +106,7 @@ export default function ProductForm({ opened, onClose, onSuccess, product }: Pro
     } else if (opened && !product) {
       form.reset();
     }
-  }, [product, opened]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [product, opened, form]);
 
   const handleSubmit = async (values: ProductFormData) => {
     try {

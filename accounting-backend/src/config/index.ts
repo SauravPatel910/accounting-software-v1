@@ -6,6 +6,7 @@ export { default as securityConfig } from "./security.config";
 export { default as emailConfig } from "./email.config";
 export { default as fileUploadConfig } from "./file-upload.config";
 export { default as businessConfig } from "./business.config";
+export { loggingConfig } from "./logging.config";
 
 export type { AppConfig } from "./app.config";
 export type { DatabaseConfig } from "./database.config";
@@ -15,3 +16,4 @@ export type { SecurityConfig } from "./security.config";
 export type { EmailConfig } from "./email.config";
 export type { FileUploadConfig } from "./file-upload.config";
 export type { BusinessConfig } from "./business.config";
+export type { LoggingConfig } from "./logging.config";

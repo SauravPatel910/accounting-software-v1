@@ -98,7 +98,7 @@ export default function ExpenseForm({ opened, onClose, onSuccess, expense }: Exp
     } else {
       form.reset();
     }
-  }, [expense, opened]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [expense, opened, form]);
 
   const loadData = async () => {
     try {
