@@ -10,6 +10,7 @@ import { AuthModule } from "./auth/auth.module";
 import { SecurityModule } from "./security";
 import { LoggingModule, LoggingInterceptor } from "./logging";
 import { DemoModule } from "./demo/demo.module";
+import { UsersModule } from "./users/users.module";
 import {
   appConfig,
   databaseConfig,
@@ -51,6 +52,7 @@ import {
     SecurityModule,
     LoggingModule,
     DemoModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
