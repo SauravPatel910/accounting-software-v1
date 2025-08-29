@@ -93,7 +93,7 @@ This document outlines the **enhanced frontend** and **backend** frameworks, lib
 
 ---
 
-## ⚙️ Backend (NestJS + Supabase + Prisma)
+## ⚙️ Backend (NestJS + Supabase)
 
 ### Core Framework
 
@@ -105,13 +105,6 @@ This document outlines the **enhanced frontend** and **backend** frameworks, lib
 ### Database & ORM ⭐ **CRITICAL**
 
 - **Supabase PostgreSQL** – Managed cloud database
-- **Prisma ORM** – ⭐ **PERFECT CHOICE** for accounting software
-  - Type-safe database access
-  - Excellent migration system
-  - Built-in connection pooling
-  - Query optimization
-- **@prisma/client** – Generated type-safe client
-- ~~**TypeORM**~~ – Stick with Prisma
 
 ### Validation & DTOs ⭐ **ESSENTIAL**
 
@@ -275,12 +268,11 @@ This document outlines the **enhanced frontend** and **backend** frameworks, lib
 
 **Backend Setup**
 
-- [x] NestJS project structure
-- [x] Prisma schema design
-- [x] Supabase connection
-- [x] Authentication module
-- [x] Basic CRUD operations
-- [x] Decimal.js integration
+- [] NestJS project structure
+- [] Supabase connection
+- [] Authentication module
+- [] Basic CRUD operations
+- [] Decimal.js integration
 
 **Frontend Setup**
 
@@ -372,7 +364,6 @@ cd accounting-backend
 
 # Core dependencies
 npm install @nestjs/config @nestjs/swagger swagger-ui-express
-npm install prisma @prisma/client
 npm install class-validator class-transformer @nestjs/mapped-types
 npm install @nestjs/passport passport-jwt @nestjs/throttler helmet
 npm install winston @nestjs/winston
@@ -382,7 +373,6 @@ npm install @nestjs/mail nodemailer handlebars
 # Development dependencies
 npm install --save-dev @types/bcrypt @types/passport-jwt
 npm install --save-dev @nestjs/testing
-npm install --save-dev prisma
 ```
 
 ---
@@ -457,7 +447,6 @@ npm install --save-dev prisma
 ### ❌ Removed:
 
 - **Redux Toolkit** (not needed with React Query)
-- **TypeORM** (Prisma is better choice)
 - **big.js** (decimal.js is more comprehensive)
 - **Chart.js** (ApexCharts is better)
 
@@ -476,7 +465,7 @@ npm install --save-dev prisma
 | -------------- | ------------------------- | -------------------------------- |
 | **Frontend**   | React + Vite + TypeScript | Modern, fast, type-safe          |
 | **UI Library** | Mantine                   | Best for business applications   |
-| **Backend**    | NestJS + Prisma           | Enterprise-grade, type-safe      |
+| **Backend**    | NestJS                    | Enterprise-grade, type-safe      |
 | **Database**   | Supabase PostgreSQL       | Managed, scalable, auth included |
 | **Forms**      | React Hook Form + Zod     | Performance + validation         |
 | **Tables**     | TanStack Table            | Essential for financial data     |
