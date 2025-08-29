@@ -277,10 +277,10 @@ This document outlines the **enhanced frontend** and **backend** frameworks, lib
 
 - [x] NestJS project structure
 - [x] Prisma schema design
-- [ ] Supabase connection
-- [ ] Authentication module
-- [ ] Basic CRUD operations
-- [ ] Decimal.js integration
+- [x] Supabase connection
+- [x] Authentication module
+- [x] Basic CRUD operations
+- [x] Decimal.js integration
 
 **Frontend Setup**
 
