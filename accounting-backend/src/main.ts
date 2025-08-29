@@ -1,24 +1,30 @@
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
+import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { AppConfigService } from "./app-config.service";
+import { SecurityHeadersService } from "./security";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Get configuration service
+  // Get configuration services
   const configService = app.get(AppConfigService);
+  const securityHeadersService = app.get(SecurityHeadersService);
 
   // Set global prefix for all routes
   app.setGlobalPrefix(configService.globalPrefix);
 
-  // Enable CORS
-  app.enableCors({
-    origin: configService.corsOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
-  });
+  // Apply security headers with Helmet
+  app.use(helmet(securityHeadersService.getHelmetConfig()));
+
+  // Apply custom security headers and logging
+  app.use(securityHeadersService.setCustomSecurityHeaders());
+  app.use(securityHeadersService.securityLogger());
+
+  // Enable CORS with enhanced configuration
+  const corsConfig = securityHeadersService.getCorsConfig();
+  app.enableCors(corsConfig);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -37,7 +43,9 @@ async function bootstrap() {
     `🚀 Application is running on: http://localhost:${configService.port}/${configService.globalPrefix}`,
   );
   console.log(`📝 Environment: ${configService.app.nodeEnv}`);
-  console.log(`🔗 CORS enabled for: ${configService.corsOrigins.join(", ")}`);
+  console.log(`🔗 CORS enabled for: ${JSON.stringify(corsConfig.origin)}`);
+  console.log(`🛡️  Security headers enabled`);
+  console.log(`⚡ Rate limiting enabled`);
 }
 
 bootstrap().catch((error) => {
