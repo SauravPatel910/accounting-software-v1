@@ -76,8 +76,7 @@ This document outlines the **enhanced frontend** and **backend** frameworks, lib
 
 ### Routing & Navigation
 
-- **React Router v6** – Page navigation
-- **React Router Dom** – DOM bindings
+- **React Router v7** – Page navigation
 
 ### Authentication & API
 
