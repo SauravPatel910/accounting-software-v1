@@ -12,6 +12,7 @@ import { LoggingModule, LoggingInterceptor } from "./logging";
 import { DemoModule } from "./demo/demo.module";
 import { UsersModule } from "./users/users.module";
 import { CompaniesModule } from "./companies/companies.module";
+import { AccountsModule } from "./accounts/accounts.module";
 // prettier-ignore
 import { appConfig, databaseConfig, supabaseConfig, jwtConfig, securityConfig, emailConfig, fileUploadConfig, businessConfig, loggingConfig } from "./config";
 
@@ -46,6 +47,7 @@ import { appConfig, databaseConfig, supabaseConfig, jwtConfig, securityConfig, e
     DemoModule,
     UsersModule,
     CompaniesModule,
+    AccountsModule,
   ],
   controllers: [AppController],
   providers: [
