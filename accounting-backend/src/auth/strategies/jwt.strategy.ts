@@ -26,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtPayload): Promise<UserData> {
     try {
       // Get user from Supabase
-      const { data: user, error } = await this.supabaseService
+      const userResult = await this.supabaseService
         .getClient()
         .from("users")
         .select("*")
@@ -34,12 +34,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         .eq("is_active", true)
         .single();
 
-      if (error || !user) {
+      if (userResult.error || !userResult.data) {
         throw new UnauthorizedException("User not found or inactive");
       }
 
       // Type assertion for Supabase user data
-      const supabaseUser = user as SupabaseUser;
+      const supabaseUser = userResult.data as SupabaseUser;
 
       // Transform to UserData format
       const userData: UserData = {

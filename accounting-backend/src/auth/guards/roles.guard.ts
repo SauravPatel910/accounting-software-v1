@@ -5,10 +5,10 @@ import {
   ForbiddenException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { UserRole, UserData } from "../types/auth.types";
+import type { UserRole, UserData } from "../types/auth.types";
 import { ROLES_KEY } from "../decorators/roles.decorator";
 
-interface AuthenticatedRequest {
+interface AuthenticatedRequest extends Request {
   user: UserData;
 }
 
@@ -26,7 +26,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest() as AuthenticatedRequest;
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user) {

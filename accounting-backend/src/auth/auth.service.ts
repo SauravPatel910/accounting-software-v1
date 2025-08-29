@@ -72,7 +72,7 @@ export class AuthService {
       }
 
       // Create user record in our users table
-      const { data: user, error: userError } = await this.supabaseService
+      const userResult = await this.supabaseService
         .getAdminClient()
         .from("users")
         .insert([
@@ -89,11 +89,11 @@ export class AuthService {
         .select()
         .single();
 
-      if (userError || !user) {
+      if (userResult.error || !userResult.data) {
         throw new BadRequestException("Failed to create user profile");
       }
 
-      const supabaseUser = user as SupabaseUser;
+      const supabaseUser = userResult.data as SupabaseUser;
       const userData = this.transformToUserData(supabaseUser);
       const tokens = await this.generateTokens(userData);
 
@@ -129,7 +129,7 @@ export class AuthService {
       }
 
       // Get user profile
-      const { data: user, error: userError } = await this.supabaseService
+      const userResult = await this.supabaseService
         .getClient()
         .from("users")
         .select("*")
@@ -137,11 +137,11 @@ export class AuthService {
         .eq("is_active", true)
         .single();
 
-      if (userError || !user) {
+      if (userResult.error || !userResult.data) {
         throw new UnauthorizedException("User not found or inactive");
       }
 
-      const supabaseUser = user as SupabaseUser;
+      const supabaseUser = userResult.data as SupabaseUser;
       const userData = this.transformToUserData(supabaseUser);
       const tokens = await this.generateTokens(userData);
 
@@ -173,7 +173,7 @@ export class AuthService {
       }
 
       // Get user profile
-      const { data: user, error: userError } = await this.supabaseService
+      const userResult = await this.supabaseService
         .getClient()
         .from("users")
         .select("*")
@@ -181,11 +181,11 @@ export class AuthService {
         .eq("is_active", true)
         .single();
 
-      if (userError || !user) {
+      if (userResult.error || !userResult.data) {
         throw new UnauthorizedException("User not found or inactive");
       }
 
-      const supabaseUser = user as SupabaseUser;
+      const supabaseUser = userResult.data as SupabaseUser;
       const userData = this.transformToUserData(supabaseUser);
       const tokens = await this.generateTokens(userData);
 
@@ -201,7 +201,7 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string): Promise<void> {
+  async logout(): Promise<void> {
     try {
       // Sign out from Supabase
       await this.supabaseService.getClient().auth.signOut();
@@ -285,7 +285,7 @@ export class AuthService {
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
-    const { token, newPassword } = resetPasswordDto;
+    const { newPassword } = resetPasswordDto;
 
     try {
       // This would be handled by Supabase Auth in the frontend
