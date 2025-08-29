@@ -5,6 +5,8 @@ import { AppService } from "./app.service";
 import { AppConfigService } from "./app-config.service";
 import { SharedModule } from "./shared";
 import { HealthModule } from "./health/health.module";
+import { AuthModule } from "./auth/auth.module";
+import { DemoModule } from "./demo/demo.module";
 import {
   appConfig,
   databaseConfig,
@@ -40,6 +42,8 @@ import {
     }),
     SharedModule,
     HealthModule,
+    AuthModule,
+    DemoModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppConfigService],
