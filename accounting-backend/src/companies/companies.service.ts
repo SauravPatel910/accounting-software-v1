@@ -543,7 +543,7 @@ export class CompaniesService {
 
   private getDefaultSettings(): CompanySettingsDto {
     return {
-      defaultCurrency: "USD",
+      defaultCurrency: "INR",
       timezone: "UTC",
       dateFormat: "YYYY-MM-DD",
       numberFormat: "1,234.56",

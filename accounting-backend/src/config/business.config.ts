@@ -3,7 +3,7 @@ import * as Joi from "joi";
 
 export default registerAs("business", (): BusinessConfig => {
   const values = {
-    defaultCurrency: process.env.DEFAULT_CURRENCY || "USD",
+    defaultCurrency: process.env.DEFAULT_CURRENCY || "INR",
     decimalPrecision: parseInt(process.env.DECIMAL_PRECISION || "2", 10),
     fiscalYearStartMonth: parseInt(
       process.env.FISCAL_YEAR_START_MONTH || "1",
@@ -35,7 +35,7 @@ export default registerAs("business", (): BusinessConfig => {
 
   // Validation schema
   const schema = Joi.object({
-    defaultCurrency: Joi.string().length(3).uppercase().default("USD"),
+    defaultCurrency: Joi.string().length(3).uppercase().default("INR"),
     decimalPrecision: Joi.number().min(0).max(8).default(2),
     fiscalYearStartMonth: Joi.number().min(1).max(12).default(1),
     supportedCurrencies: Joi.array()

@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS companies (
     logo_url VARCHAR(500),
     address JSONB,
     settings JSONB NOT NULL DEFAULT '{
-        "defaultCurrency": "USD",
+        "defaultCurrency": "INR",
         "timezone": "UTC",
         "dateFormat": "YYYY-MM-DD",
         "numberFormat": "1,234.56",

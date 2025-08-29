@@ -143,7 +143,7 @@ INSERT INTO public.users (
     'admin',
     '00000000-0000-0000-0000-000000000001',
     'active',
-    '{"language": "en", "timezone": "UTC", "currency": "USD"}'
+    '{"language": "en", "timezone": "UTC", "currency": "INR"}'
 ),
 (
     '00000000-0000-0000-0000-000000000002',
@@ -153,7 +153,7 @@ INSERT INTO public.users (
     'manager',
     '00000000-0000-0000-0000-000000000001',
     'active',
-    '{"language": "en", "timezone": "UTC", "currency": "USD"}'
+    '{"language": "en", "timezone": "UTC", "currency": "INR"}'
 ),
 (
     '00000000-0000-0000-0000-000000000003',
@@ -163,7 +163,7 @@ INSERT INTO public.users (
     'user',
     '00000000-0000-0000-0000-000000000001',
     'active',
-    '{"language": "en", "timezone": "UTC", "currency": "USD"}'
+    '{"language": "en", "timezone": "UTC", "currency": "INR"}'
 )
 ON CONFLICT (email) DO NOTHING;
 

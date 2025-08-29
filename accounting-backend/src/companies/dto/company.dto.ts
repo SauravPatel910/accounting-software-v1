@@ -59,7 +59,7 @@ export class CompanySettingsDto {
   @IsOptional()
   @MaxLength(3)
   @MinLength(3)
-  defaultCurrency?: string = "USD";
+  defaultCurrency?: string = "INR";
 
   @IsString()
   @IsOptional()

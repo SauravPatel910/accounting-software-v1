@@ -72,7 +72,7 @@ export class AccountsService {
         is_control_account: createAccountDto.isControlAccount || false,
         allow_direct_transactions:
           createAccountDto.allowDirectTransactions ?? true,
-        currency: createAccountDto.currency || "USD",
+        currency: createAccountDto.currency || "INR",
         opening_balance: new Decimal(
           createAccountDto.openingBalance || 0,
         ).toNumber(),
@@ -607,7 +607,7 @@ export class AccountsService {
         creditBalance: creditTotal.toNumber(),
         netBalance: netBalance.toNumber(),
         asOfDate: asOfDate || new Date().toISOString(),
-        currency: "USD", // TODO: Get from account currency
+        currency: "INR", // TODO: Get from account currency
       };
     } catch (error) {
       if (error instanceof BadRequestException) {
@@ -1067,7 +1067,7 @@ export class AccountsService {
       level: hierarchy.level,
       isControlAccount: hierarchy.isControlAccount,
       allowDirectTransactions: hierarchy.allowDirectTransactions,
-      currency: "USD", // Default for hierarchy
+      currency: "INR", // Default for hierarchy
       openingBalance: 0, // Not available in hierarchy DTO
       openingBalanceDate: "", // Not available in hierarchy DTO
       currentBalance: hierarchy.balance?.netBalance || 0,

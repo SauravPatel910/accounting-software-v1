@@ -141,7 +141,7 @@ const businessConfig = this.configService.business;
 
 **Environment Variables:**
 
-- `DEFAULT_CURRENCY` - Default currency code (e.g., USD)
+- `DEFAULT_CURRENCY` - Default currency code (e.g., INR)
 - `DECIMAL_PRECISION` - Decimal places for calculations
 - `FISCAL_YEAR_START_MONTH` - Fiscal year start month (1-12)
 
@@ -223,15 +223,18 @@ Error: JWT Configuration validation error: "secret" length must be at least 32 c
 ### Common Issues:
 
 1. **JWT Configuration Error**
+
    - Ensure JWT secrets are at least 32 characters long
    - Check both JWT_SECRET and JWT_REFRESH_SECRET
 
 2. **Database Connection Error**
+
    - Verify database credentials
    - Check network connectivity
    - Ensure database exists
 
 3. **Supabase Connection Error**
+
    - Verify Supabase URL and keys
    - Check project settings in Supabase dashboard
 

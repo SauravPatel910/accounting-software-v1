@@ -12,7 +12,7 @@ interface ExportOptions {
   includeSummary: boolean;
   includeCharts: boolean;
   dateFormat: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
-  currency: "USD" | "EUR" | "GBP";
+  currency: "INR" | "EUR" | "USD";
 }
 
 interface ReportExportProps {
@@ -38,7 +38,7 @@ export function ReportExport({
     includeSummary: true,
     includeCharts: false,
     dateFormat: "MM/DD/YYYY",
-    currency: "USD",
+    currency: "INR",
   });
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
@@ -330,9 +330,12 @@ export function ReportExport({
                 <Select
                   label="Currency"
                   data={[
+                    { value: "INR", label: "INR (₹)" },
                     { value: "USD", label: "USD ($)" },
                     { value: "EUR", label: "EUR (€)" },
                     { value: "GBP", label: "GBP (£)" },
+                    { value: "AUD", label: "AUD (A$)" },
+                    { value: "CAD", label: "CAD (C$)" },
                   ]}
                   value={exportOptions.currency}
                   onChange={(value) =>

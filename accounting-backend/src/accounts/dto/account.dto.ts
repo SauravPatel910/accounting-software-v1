@@ -102,7 +102,7 @@ export class CreateAccountDto {
   @IsOptional()
   @MaxLength(3)
   @MinLength(3)
-  currency?: string = "USD";
+  currency?: string = "INR";
 
   @IsNumber()
   @IsOptional()
@@ -425,7 +425,7 @@ export class AccountImportDto {
 
   @IsString()
   @IsOptional()
-  currency?: string = "USD";
+  currency?: string = "INR";
 }
 
 export class AccountValidationResultDto {

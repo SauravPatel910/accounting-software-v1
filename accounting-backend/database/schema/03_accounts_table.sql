@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     allow_direct_transactions BOOLEAN NOT NULL DEFAULT TRUE,
 
     -- Financial properties
-    currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+    currency VARCHAR(3) NOT NULL DEFAULT 'INR',
     opening_balance DECIMAL(15,2) NOT NULL DEFAULT 0.00,
     opening_balance_date DATE,
     current_balance DECIMAL(15,2) NOT NULL DEFAULT 0.00,
