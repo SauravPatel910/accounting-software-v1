@@ -11,17 +11,9 @@ import { SecurityModule } from "./security";
 import { LoggingModule, LoggingInterceptor } from "./logging";
 import { DemoModule } from "./demo/demo.module";
 import { UsersModule } from "./users/users.module";
-import {
-  appConfig,
-  databaseConfig,
-  supabaseConfig,
-  jwtConfig,
-  securityConfig,
-  emailConfig,
-  fileUploadConfig,
-  businessConfig,
-  loggingConfig,
-} from "./config";
+import { CompaniesModule } from "./companies/companies.module";
+// prettier-ignore
+import { appConfig, databaseConfig, supabaseConfig, jwtConfig, securityConfig, emailConfig, fileUploadConfig, businessConfig, loggingConfig } from "./config";
 
 @Module({
   imports: [
@@ -53,6 +45,7 @@ import {
     LoggingModule,
     DemoModule,
     UsersModule,
+    CompaniesModule,
   ],
   controllers: [AppController],
   providers: [

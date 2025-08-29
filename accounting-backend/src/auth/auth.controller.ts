@@ -1,24 +1,10 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-  Patch,
-  Get,
-} from "@nestjs/common";
+// prettier-ignore
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus, Patch, Get } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
-import {
-  LoginDto,
-  RegisterDto,
-  RefreshTokenDto,
-  ChangePasswordDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
-} from "./dto/auth.dto";
+// prettier-ignore
+import { LoginDto, RegisterDto, RefreshTokenDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from "./dto/auth.dto";
 import type { UserData, AuthResponse } from "./types/auth.types";
 
 @Controller("auth")
