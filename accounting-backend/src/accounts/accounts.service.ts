@@ -816,13 +816,16 @@ export class AccountsService {
     return !error && data && data.length > 0;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async hasTransactions(
     accountId: string,
     companyId: string,
   ): Promise<boolean> {
     const supabase = this.supabaseService.getClient();
-
+    console.log(
+      "Checking for transactions in account and company:",
+      accountId,
+      companyId,
+    );
     const { data, error } = await supabase
       .from("transaction_entries")
       .select("id")

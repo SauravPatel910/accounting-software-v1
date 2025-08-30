@@ -1,10 +1,13 @@
 import { Request } from "express";
+import { UserRole } from "../types/auth.types";
 
 export interface AuthenticatedUser {
+  sub: string; // user id (from JWT payload)
   id: string;
   email: string;
   companyId: string;
-  role: string;
+  organizationId?: string;
+  role: UserRole;
   exp?: number;
   iat?: number;
 }

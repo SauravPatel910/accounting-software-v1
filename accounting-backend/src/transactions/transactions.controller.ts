@@ -26,18 +26,22 @@ import {
   UpdateTransactionDto,
   TransactionQueryDto,
   TransactionResponseDto,
-  BatchTransactionDto,
   CreateBatchTransactionDto,
   BatchProcessingResultDto,
   ReconciliationDto,
   ReconciliationResultDto,
   TransactionReportDto,
   UserTransactionPermissionsDto,
+  TransactionListResponseDto,
+  TransactionAuditLogDto,
+  ReconciliationMatchDto,
+  TransactionValidationResultDto,
 } from "./dto/transaction.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { UserRole } from "../auth/types/auth.types";
+import type { AuthenticatedRequest } from "../auth/interfaces/authenticated-request.interface";
 
 @ApiTags("transactions")
 @ApiBearerAuth()
@@ -58,7 +62,7 @@ export class TransactionsController {
   @ApiResponse({ status: 403, description: "Insufficient permissions" })
   async create(
     @Body() createTransactionDto: CreateTransactionDto,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<TransactionResponseDto> {
     return this.transactionsService.create(
       createTransactionDto,
@@ -84,7 +88,10 @@ export class TransactionsController {
     required: false,
     enum: ["DRAFT", "POSTED", "VOID"],
   })
-  async findAll(@Query() query: TransactionQueryDto, @Request() req: any) {
+  async findAll(
+    @Query() query: TransactionQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TransactionListResponseDto> {
     return this.transactionsService.findAll(query, req.user.companyId);
   }
 
@@ -100,7 +107,7 @@ export class TransactionsController {
   @ApiParam({ name: "id", description: "Transaction ID" })
   async findOne(
     @Param("id") id: string,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<TransactionResponseDto> {
     return this.transactionsService.findOne(id, req.user.companyId);
   }
@@ -119,7 +126,7 @@ export class TransactionsController {
   async update(
     @Param("id") id: string,
     @Body() updateTransactionDto: UpdateTransactionDto,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<TransactionResponseDto> {
     return this.transactionsService.update(
       id,
@@ -135,7 +142,10 @@ export class TransactionsController {
   @ApiResponse({ status: 200, description: "Transaction deleted successfully" })
   @ApiResponse({ status: 404, description: "Transaction not found" })
   @ApiParam({ name: "id", description: "Transaction ID" })
-  async remove(@Param("id") id: string, @Request() req: any) {
+  async remove(
+    @Param("id") id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<void> {
     return this.transactionsService.remove(id, req.user.companyId);
   }
 
@@ -156,7 +166,7 @@ export class TransactionsController {
   @ApiParam({ name: "id", description: "Transaction ID" })
   async postTransaction(
     @Param("id") id: string,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<TransactionResponseDto> {
     return this.transactionsService.postTransaction(
       id,
@@ -179,7 +189,7 @@ export class TransactionsController {
   @ApiParam({ name: "id", description: "Transaction ID" })
   async reverseTransaction(
     @Param("id") id: string,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<TransactionResponseDto> {
     return await this.transactionsService.reverseTransaction(
       id,
@@ -194,7 +204,10 @@ export class TransactionsController {
   @ApiOperation({ summary: "Validate a transaction without posting" })
   @ApiResponse({ status: 200, description: "Validation completed" })
   @ApiParam({ name: "id", description: "Transaction ID" })
-  async validateTransaction(@Param("id") id: string, @Request() req: any) {
+  async validateTransaction(
+    @Param("id") id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TransactionValidationResultDto> {
     return this.transactionsService.validateTransaction(id, req.user.companyId);
   }
 
@@ -210,7 +223,7 @@ export class TransactionsController {
   @ApiResponse({ status: 400, description: "Invalid batch data" })
   async createBatch(
     @Body() createBatchDto: CreateBatchTransactionDto,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<BatchProcessingResultDto> {
     return await this.transactionsService.createBatch(
       createBatchDto,
@@ -231,7 +244,7 @@ export class TransactionsController {
   @ApiParam({ name: "id", description: "Batch ID" })
   async getBatch(
     @Param("id") id: string,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<BatchProcessingResultDto> {
     return await this.transactionsService.getBatch(id, req.user.companyId);
   }
@@ -241,7 +254,10 @@ export class TransactionsController {
   @ApiOperation({ summary: "Get batch processing status" })
   @ApiResponse({ status: 200, description: "Batch status retrieved" })
   @ApiParam({ name: "id", description: "Batch ID" })
-  async getBatchStatus(@Param("id") id: string, @Request() req: any) {
+  async getBatchStatus(
+    @Param("id") id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ status: string; [key: string]: any }> {
     return this.transactionsService.getBatchStatus(id, req.user.companyId);
   }
 
@@ -257,7 +273,7 @@ export class TransactionsController {
   @ApiResponse({ status: 400, description: "Invalid reconciliation data" })
   async reconcileTransactions(
     @Body() reconciliationDto: ReconciliationDto,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<ReconciliationResultDto> {
     return await this.transactionsService.reconcileTransactions(
       reconciliationDto,
@@ -279,8 +295,8 @@ export class TransactionsController {
     @Query("startDate") startDate: string,
     @Query("endDate") endDate: string,
     @Query("amount") amount: number,
-    @Request() req: any,
-  ) {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<ReconciliationMatchDto[]> {
     return await this.transactionsService.findReconciliationMatches(
       accountId,
       endDate, // Use endDate as statementDate
@@ -296,8 +312,12 @@ export class TransactionsController {
   @ApiParam({ name: "accountId", description: "Account ID" })
   async getReconciliationStatus(
     @Param("accountId") accountId: string,
-    @Request() req: any,
-  ) {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{
+    reconciledCount: number;
+    unreconciledCount: number;
+    lastReconciliation: string | null;
+  }> {
     return this.transactionsService.getReconciliationStatus(
       accountId,
       req.user.companyId,
@@ -311,8 +331,8 @@ export class TransactionsController {
   @ApiResponse({ status: 200, description: "Report generated successfully" })
   async generateReport(
     @Body() reportDto: TransactionReportDto,
-    @Request() req: any,
-  ) {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<any> {
     return this.transactionsService.generateReport(
       reportDto.format || "trial_balance",
       reportDto,
@@ -332,8 +352,8 @@ export class TransactionsController {
   @ApiQuery({ name: "asOfDate", required: false, type: String })
   async getTrialBalance(
     @Query("asOfDate") asOfDate: string,
-    @Request() req: any,
-  ) {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<any> {
     return this.transactionsService.getTrialBalance(
       asOfDate,
       req.user.companyId,
@@ -356,8 +376,8 @@ export class TransactionsController {
     @Param("accountId") accountId: string,
     @Query("startDate") startDate: string,
     @Query("endDate") endDate: string,
-    @Request() req: any,
-  ) {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<any> {
     return this.transactionsService.getAccountLedger(
       accountId,
       req.user.companyId,
@@ -372,8 +392,14 @@ export class TransactionsController {
   @ApiOperation({ summary: "Get transaction audit log" })
   @ApiResponse({ status: 200, description: "Audit log retrieved" })
   @ApiParam({ name: "id", description: "Transaction ID" })
-  async getAuditLog(@Param("id") id: string, @Request() req: any) {
-    return this.transactionsService.getAuditLog(id, req.user.companyId);
+  async getAuditLog(
+    @Param("id") id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TransactionAuditLogDto[]> {
+    return this.transactionsService.getAuditLog(
+      id,
+      req.user.companyId,
+    ) as Promise<TransactionAuditLogDto[]>;
   }
 
   @Get(":id/history")
@@ -381,11 +407,14 @@ export class TransactionsController {
   @ApiOperation({ summary: "Get transaction change history" })
   @ApiResponse({ status: 200, description: "Transaction history retrieved" })
   @ApiParam({ name: "id", description: "Transaction ID" })
-  async getTransactionHistory(@Param("id") id: string, @Request() req: any) {
+  async getTransactionHistory(
+    @Param("id") id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<any[]> {
     return this.transactionsService.getTransactionHistory(
       id,
       req.user.companyId,
-    );
+    ) as Promise<any[]>;
   }
 
   // User Permissions
@@ -397,12 +426,12 @@ export class TransactionsController {
     type: UserTransactionPermissionsDto,
   })
   async getUserPermissions(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<UserTransactionPermissionsDto> {
     return this.transactionsService.getUserPermissions(
       req.user.sub,
       req.user.companyId,
-    );
+    ) as Promise<UserTransactionPermissionsDto>;
   }
 
   // Search and Filter Operations
@@ -415,14 +444,16 @@ export class TransactionsController {
   async advancedSearch(
     @Query("query") query: string,
     @Query("filters") filters: string,
-    @Request() req: any,
-  ) {
-    const parsedFilters = filters ? JSON.parse(filters) : {};
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TransactionListResponseDto> {
+    const parsedFilters: Record<string, any> = filters
+      ? (JSON.parse(filters) as Record<string, any>)
+      : {};
     const searchParams = { query, ...parsedFilters };
     return this.transactionsService.advancedSearch(
       searchParams,
       req.user.companyId,
-    );
+    ) as Promise<TransactionListResponseDto>;
   }
 
   @Get("analytics/summary")
@@ -436,8 +467,8 @@ export class TransactionsController {
   })
   async getAnalyticsSummary(
     @Query("period") period: string = "monthly",
-    @Request() req: any,
-  ) {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<any> {
     return this.transactionsService.getAnalyticsSummary(
       period,
       req.user.companyId,
@@ -449,7 +480,10 @@ export class TransactionsController {
   @Roles(UserRole.ADMIN, UserRole.ACCOUNTANT)
   @ApiOperation({ summary: "Import transactions from file" })
   @ApiResponse({ status: 200, description: "Import completed" })
-  async importTransactions(@Body() importData: any, @Request() req: any) {
+  async importTransactions(
+    @Body() importData: any,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<any> {
     return this.transactionsService.importTransactions(
       importData,
       req.user.companyId,
@@ -468,8 +502,8 @@ export class TransactionsController {
     @Query("format") format: string = "csv",
     @Query("startDate") startDate: string,
     @Query("endDate") endDate: string,
-    @Request() req: any,
-  ) {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<any> {
     return this.transactionsService.exportTransactions(req.user.companyId, {
       format,
       startDate,

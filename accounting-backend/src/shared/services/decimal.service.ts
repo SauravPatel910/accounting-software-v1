@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { AppConfigService } from '../../app-config.service';
+import { Injectable } from "@nestjs/common";
+import { AppConfigService } from "../../app-config.service";
 
 // Simple decimal service using JavaScript's built-in precision handling
 // For production use, consider integrating a proper decimal library
@@ -17,8 +17,8 @@ export class DecimalService {
    * Add two decimal values with precision handling
    */
   add(a: string | number, b: string | number): number {
-    const numA = typeof a === 'string' ? parseFloat(a) : a;
-    const numB = typeof b === 'string' ? parseFloat(b) : b;
+    const numA = typeof a === "string" ? parseFloat(a) : a;
+    const numB = typeof b === "string" ? parseFloat(b) : b;
     return this.round(numA + numB);
   }
 
@@ -26,8 +26,8 @@ export class DecimalService {
    * Subtract two decimal values
    */
   subtract(a: string | number, b: string | number): number {
-    const numA = typeof a === 'string' ? parseFloat(a) : a;
-    const numB = typeof b === 'string' ? parseFloat(b) : b;
+    const numA = typeof a === "string" ? parseFloat(a) : a;
+    const numB = typeof b === "string" ? parseFloat(b) : b;
     return this.round(numA - numB);
   }
 
@@ -35,8 +35,8 @@ export class DecimalService {
    * Multiply two decimal values
    */
   multiply(a: string | number, b: string | number): number {
-    const numA = typeof a === 'string' ? parseFloat(a) : a;
-    const numB = typeof b === 'string' ? parseFloat(b) : b;
+    const numA = typeof a === "string" ? parseFloat(a) : a;
+    const numB = typeof b === "string" ? parseFloat(b) : b;
     return this.round(numA * numB);
   }
 
@@ -44,10 +44,10 @@ export class DecimalService {
    * Divide two decimal values
    */
   divide(a: string | number, b: string | number): number {
-    const numA = typeof a === 'string' ? parseFloat(a) : a;
-    const numB = typeof b === 'string' ? parseFloat(b) : b;
+    const numA = typeof a === "string" ? parseFloat(a) : a;
+    const numB = typeof b === "string" ? parseFloat(b) : b;
     if (numB === 0) {
-      throw new Error('Division by zero');
+      throw new Error("Division by zero");
     }
     return this.round(numA / numB);
   }
@@ -56,7 +56,7 @@ export class DecimalService {
    * Round a decimal value to the specified precision
    */
   round(value: string | number, precision?: number): number {
-    const num = typeof value === 'string' ? parseFloat(value) : value;
+    const num = typeof value === "string" ? parseFloat(value) : value;
     const dp = precision ?? this.defaultPrecision;
     return Math.round(num * Math.pow(10, dp)) / Math.pow(10, dp);
   }
@@ -75,14 +75,14 @@ export class DecimalService {
   ): string {
     const precision = options?.precision ?? this.defaultPrecision;
     const currency = options?.currency ?? this.defaultCurrency;
-    const locale = options?.locale ?? 'en-US';
+    const locale = options?.locale ?? "en-US";
     const includeCurrency = options?.includeCurrency ?? false;
 
     const rounded = this.round(value, precision);
 
     if (includeCurrency) {
       return new Intl.NumberFormat(locale, {
-        style: 'currency',
+        style: "currency",
         currency: currency,
         minimumFractionDigits: precision,
         maximumFractionDigits: precision,
@@ -99,7 +99,7 @@ export class DecimalService {
    * Parse a string value to number
    */
   parse(value: string): number {
-    const cleaned = value.replace(/[^\d.-]/g, '');
+    const cleaned = value.replace(/[^\d.-]/g, "");
     return parseFloat(cleaned);
   }
 
@@ -107,7 +107,7 @@ export class DecimalService {
    * Check if a value is zero
    */
   isZero(value: string | number): boolean {
-    const num = typeof value === 'string' ? parseFloat(value) : value;
+    const num = typeof value === "string" ? parseFloat(value) : value;
     return Math.abs(num) < Math.pow(10, -this.defaultPrecision);
   }
 
@@ -115,7 +115,7 @@ export class DecimalService {
    * Check if a value is positive
    */
   isPositive(value: string | number): boolean {
-    const num = typeof value === 'string' ? parseFloat(value) : value;
+    const num = typeof value === "string" ? parseFloat(value) : value;
     return num > 0;
   }
 
@@ -123,7 +123,7 @@ export class DecimalService {
    * Check if a value is negative
    */
   isNegative(value: string | number): boolean {
-    const num = typeof value === 'string' ? parseFloat(value) : value;
+    const num = typeof value === "string" ? parseFloat(value) : value;
     return num < 0;
   }
 
@@ -131,7 +131,7 @@ export class DecimalService {
    * Get absolute value
    */
   abs(value: string | number): number {
-    const num = typeof value === 'string' ? parseFloat(value) : value;
+    const num = typeof value === "string" ? parseFloat(value) : value;
     return Math.abs(num);
   }
 
@@ -140,8 +140,8 @@ export class DecimalService {
    * Returns: -1 if a < b, 0 if a === b, 1 if a > b
    */
   compare(a: string | number, b: string | number): number {
-    const numA = typeof a === 'string' ? parseFloat(a) : a;
-    const numB = typeof b === 'string' ? parseFloat(b) : b;
+    const numA = typeof a === "string" ? parseFloat(a) : a;
+    const numB = typeof b === "string" ? parseFloat(b) : b;
     const diff = numA - numB;
     const epsilon = Math.pow(10, -this.defaultPrecision);
 
@@ -220,7 +220,7 @@ export class DecimalService {
    */
   toString(value: string | number, precision?: number): string {
     const dp = precision ?? this.defaultPrecision;
-    const num = typeof value === 'string' ? parseFloat(value) : value;
+    const num = typeof value === "string" ? parseFloat(value) : value;
     return num.toFixed(dp);
   }
 
@@ -228,14 +228,14 @@ export class DecimalService {
    * Convert to number
    */
   toNumber(value: string | number): number {
-    return typeof value === 'string' ? parseFloat(value) : value;
+    return typeof value === "string" ? parseFloat(value) : value;
   }
 
   /**
    * Validate if a string can be converted to a valid decimal
    */
   isValidDecimal(value: string): boolean {
-    const cleaned = value.replace(/[^\d.-]/g, '');
+    const cleaned = value.replace(/[^\d.-]/g, "");
     const num = parseFloat(cleaned);
     return !isNaN(num) && isFinite(num);
   }
@@ -243,19 +243,16 @@ export class DecimalService {
   /**
    * Round to nearest currency unit (for cash transactions)
    */
-  roundToCurrency(
-    value: string | number,
-    currency?: string,
-  ): number {
+  roundToCurrency(value: string | number, currency?: string): number {
     const curr = currency ?? this.defaultCurrency;
 
     const roundingRules: Record<string, number> = {
-      'JPY': 0,
-      'KRW': 0,
-      'INR': 2,
-      'USD': 2,
-      'EUR': 2,
-      'GBP': 2,
+      JPY: 0,
+      KRW: 0,
+      INR: 2,
+      USD: 2,
+      EUR: 2,
+      GBP: 2,
     };
 
     const precision = roundingRules[curr] ?? 2;

@@ -117,11 +117,15 @@ export class TransactionsService {
       };
 
       // Start transaction
-      const { data: transaction, error: transactionError } = await supabase
+      const transactionResponse = await supabase
         .from("transactions")
         .insert(transactionData)
         .select()
         .single();
+
+      const transaction =
+        transactionResponse.data as DatabaseTransaction | null;
+      const transactionError = transactionResponse.error;
 
       if (transactionError || !transaction) {
         this.logger.error(
@@ -145,7 +149,7 @@ export class TransactionsService {
       );
 
       const response = this.mapTransactionToResponseDto(
-        transaction as DatabaseTransaction,
+        transaction,
       );
       response.entries = entries.map((entry) =>
         this.mapEntryToResponseDto(entry),
@@ -276,16 +280,19 @@ export class TransactionsService {
         throw new BadRequestException("Failed to fetch transactions");
       }
 
-      const transactions = (response.data || []) as any[];
-      const mappedTransactions = transactions.map((transaction) => {
-        const mapped = this.mapTransactionToResponseDto(transaction);
-        if (transaction.transaction_entries) {
-          mapped.entries = transaction.transaction_entries.map((entry: any) =>
-            this.mapEntryToResponseDto(entry),
-          );
-        }
-        return mapped;
-      });
+      const transactions = (response.data || []) as DatabaseTransaction[];
+      const mappedTransactions = transactions.map(
+        (transaction: DatabaseTransaction) => {
+          const mapped = this.mapTransactionToResponseDto(transaction);
+          if ((transaction as any).transaction_entries) {
+            mapped.entries = (
+              (transaction as any)
+                .transaction_entries as DatabaseTransactionEntry[]
+            ).map((entry: any) => this.mapEntryToResponseDto(entry));
+          }
+          return mapped;
+        },
+      );
 
       // Calculate totals
       const totals = this.calculateTransactionsTotals(transactions);
@@ -350,7 +357,9 @@ export class TransactionsService {
         throw new NotFoundException("Transaction not found");
       }
 
-      const transaction = response.data as any;
+      const transaction = response.data as DatabaseTransaction & {
+        transaction_entries?: any[];
+      };
       const mapped = this.mapTransactionToResponseDto(transaction);
 
       if (includeEntries && transaction.transaction_entries) {
@@ -452,35 +461,31 @@ export class TransactionsService {
           .eq("transaction_id", id);
 
         // Create new entries
-        const newEntries = await this.createTransactionEntries(
-          id,
-          updateTransactionDto.entries,
-        );
+        await this.createTransactionEntries(id, updateTransactionDto.entries);
 
         // Update total amount
         updateData.total_amount = this.calculateTotalAmount(
           updateTransactionDto.entries,
         ).toNumber();
 
-        // Update account balances if transaction was or will be posted
-        if (
-          existingTransaction.status === TransactionStatus.POSTED ||
-          (updateTransactionDto as any).status === TransactionStatus.POSTED
-        ) {
-          await this.updateAccountBalances(newEntries);
-        }
+        // Note: Account balances are not updated during edit as transaction is not posted
+        // Account balances will be updated when the transaction is posted via postTransaction method
       }
 
       // Handle auto-posting
       // Remove autoPost logic for update
 
-      const { data: updatedTransaction, error } = await supabase
+      const updateResponse = await supabase
         .from("transactions")
         .update(updateData)
         .eq("id", id)
         .eq("company_id", companyId)
         .select()
         .single();
+
+      const updatedTransaction =
+        updateResponse.data as DatabaseTransaction | null;
+      const error = updateResponse.error;
 
       if (error || !updatedTransaction) {
         this.logger.error(
@@ -497,7 +502,7 @@ export class TransactionsService {
       );
 
       const response = this.mapTransactionToResponseDto(
-        updatedTransaction as DatabaseTransaction,
+        updatedTransaction,
       );
       if (validationResult) {
         response.validationResult =
@@ -593,7 +598,7 @@ export class TransactionsService {
 
       // Validate transaction before posting
       const validationResult = await this.validateDoubleEntryBookkeeping(
-        transaction.entries!.map((entry) => ({
+        transaction.entries.map((entry) => ({
           accountId: entry.accountId,
           debitAmount: entry.debitAmount,
           creditAmount: entry.creditAmount,
@@ -618,7 +623,7 @@ export class TransactionsService {
 
       const supabase = this.supabaseService.getClient();
 
-      const { data: updatedTransaction, error } = await supabase
+      const postTransactionResponse = await supabase
         .from("transactions")
         .update({
           status: TransactionStatus.POSTED,
@@ -630,6 +635,10 @@ export class TransactionsService {
         .eq("company_id", companyId)
         .select()
         .single();
+
+      const updatedTransaction =
+        postTransactionResponse.data as DatabaseTransaction | null;
+      const error = postTransactionResponse.error;
 
       if (error || !updatedTransaction) {
         this.logger.error(
@@ -666,7 +675,7 @@ export class TransactionsService {
 
       this.logger.log("Transaction posted successfully", "TransactionsService");
       return this.mapTransactionToResponseDto(
-        updatedTransaction as DatabaseTransaction,
+        updatedTransaction,
       );
     } catch (error) {
       if (
@@ -714,11 +723,14 @@ export class TransactionsService {
         created_by: userId,
       };
 
-      const { data: batch, error: batchError } = await supabase
+      const batchResponse = await supabase
         .from("batch_transactions")
         .insert(batchData)
         .select()
         .single();
+
+      const batch = batchResponse.data as DatabaseBatchTransaction | null;
+      const batchError = batchResponse.error;
 
       if (batchError || !batch) {
         throw new BadRequestException("Failed to create batch");
@@ -734,7 +746,7 @@ export class TransactionsService {
       );
 
       return this.mapBatchToProcessingResultDto(
-        batch as DatabaseBatchTransaction,
+        batch,
       );
     } catch (error) {
       this.logger.error(
@@ -753,7 +765,7 @@ export class TransactionsService {
     try {
       const supabase = this.supabaseService.getClient();
 
-      const { data: batch, error } = await supabase
+      const getBatchResponse = await supabase
         .from("batch_transactions")
         .select(
           `
@@ -765,12 +777,15 @@ export class TransactionsService {
         .eq("company_id", companyId)
         .single();
 
+      const batch = getBatchResponse.data as DatabaseBatchTransaction | null;
+      const error = getBatchResponse.error;
+
       if (error || !batch) {
         throw new NotFoundException("Batch not found");
       }
 
       return this.mapBatchToProcessingResultDto(
-        batch as DatabaseBatchTransaction,
+        batch,
       );
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -802,7 +817,7 @@ export class TransactionsService {
       }
 
       // Create reversal transaction
-      const reversalEntries = originalTransaction.entries!.map(
+      const reversalEntries = originalTransaction.entries.map(
         (entry, index) => ({
           accountId: entry.accountId,
           debitAmount: entry.creditAmount, // Swap debit and credit
@@ -938,10 +953,18 @@ export class TransactionsService {
       }
 
       const totalReconciledAmount =
-        transactions?.reduce((sum, t) => sum + parseFloat(t.total_amount), 0) ||
-        0;
+        transactions?.reduce(
+          (sum: number, t: any) =>
+            sum +
+            parseFloat(
+              (t as DatabaseTransaction).total_amount?.toString() ?? "0",
+            ),
+          0,
+        ) || 0;
       const reconciledTransactions =
-        transactions?.map((t) => this.mapTransactionToResponseDto(t)) || [];
+        transactions?.map((t: any) =>
+          this.mapTransactionToResponseDto(t as DatabaseTransaction),
+        ) || [];
 
       // Create reconciliation record (implement if you have a reconciliations table)
       this.logger.log(
@@ -953,7 +976,7 @@ export class TransactionsService {
         reconciliationId: `reconciliation_${Date.now()}`,
         accountId: reconciliationDto.accountId,
         reconciledTransactions,
-        totalReconciledAmount,
+        totalReconciledAmount: totalReconciledAmount as number,
         reconciledCount: reconciliationDto.transactionIds.length,
         unreconciledCount: 0, // Could calculate this if needed
         reconciliationDate: new Date(),
@@ -1023,17 +1046,20 @@ export class TransactionsService {
       // Simple matching logic - in reality, this would be more sophisticated
       const matches: ReconciliationMatchDto[] = (transactions || []).map(
         (txn: any) => ({
-          transactionId: txn.id,
+          transactionId: (txn as DatabaseTransaction).id,
           matchConfidence: 0.8, // Placeholder confidence score
           statementAmount: tolerance, // Use tolerance as statement amount for now
-          transactionAmount: parseFloat(txn.total_amount),
+          transactionAmount: parseFloat(
+            (txn as DatabaseTransaction).total_amount?.toString() ?? "0",
+          ),
           dateDifference:
             Math.abs(
-              new Date(txn.transaction_date).getTime() -
-                new Date(statementDate).getTime(),
+              new Date(
+                (txn as DatabaseTransaction).transaction_date,
+              ).getTime() - new Date(statementDate).getTime(),
             ) /
             (1000 * 60 * 60 * 24),
-          description: txn.description || "",
+          description: (txn as DatabaseTransaction).description || "",
           suggestedMatch: true,
         }),
       );
@@ -1096,21 +1122,26 @@ export class TransactionsService {
 
       // Calculate balances for each account
       const trialBalance = (balances || []).map((account: any) => {
-        const debitTotal = account.transaction_entries.reduce(
-          (sum: number, entry: any) => sum + (entry.debit_amount || 0),
-          0,
-        );
-        const creditTotal = account.transaction_entries.reduce(
-          (sum: number, entry: any) => sum + (entry.credit_amount || 0),
-          0,
-        );
+        const entries = Array.isArray(account?.transaction_entries)
+          ? account.transaction_entries
+          : [];
+        const debitTotal = entries.reduce((sum: number, entry: any) => {
+          const debitAmount =
+            typeof entry?.debit_amount === "number" ? entry.debit_amount : 0;
+          return sum + debitAmount;
+        }, 0);
+        const creditTotal = entries.reduce((sum: number, entry: any) => {
+          const creditAmount =
+            typeof entry?.credit_amount === "number" ? entry.credit_amount : 0;
+          return sum + creditAmount;
+        }, 0);
 
         return {
-          accountId: account.id,
-          accountCode: account.code,
-          accountName: account.name,
-          accountType: account.type,
-          accountSubType: account.sub_type,
+          accountId: String(account?.id || ""),
+          accountCode: String(account?.code || ""),
+          accountName: String(account?.name || ""),
+          accountType: String(account?.type || ""),
+          accountSubType: String(account?.sub_type || ""),
           debitBalance: debitTotal,
           creditBalance: creditTotal,
           netBalance: debitTotal - creditTotal,
@@ -1121,11 +1152,14 @@ export class TransactionsService {
         asOfDate,
         accounts: trialBalance,
         totalDebits: trialBalance.reduce(
-          (sum, acc) => sum + acc.debitBalance,
+          (sum: number, acc: any) =>
+            sum + (typeof acc.debitBalance === "number" ? acc.debitBalance : 0),
           0,
         ),
         totalCredits: trialBalance.reduce(
-          (sum, acc) => sum + acc.creditBalance,
+          (sum: number, acc: any) =>
+            sum +
+            (typeof acc.creditBalance === "number" ? acc.creditBalance : 0),
           0,
         ),
       };
@@ -1562,7 +1596,7 @@ export class TransactionsService {
     };
   }
 
-  private mapEntryToResponseDto(entry: any): any {
+  private mapEntryToResponseDto(entry: any): TransactionEntryResponseDto {
     return {
       id: entry.id,
       transactionId: entry.transaction_id,
