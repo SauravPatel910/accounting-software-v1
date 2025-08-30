@@ -1,33 +1,12 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-  ParseUUIDPipe,
-  ValidationPipe,
-} from "@nestjs/common";
+// prettier-ignore
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe, ValidationPipe } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { UsersService } from "./users.service";
-import {
-  CreateUserDto,
-  UpdateUserDto,
-  UpdateUserPreferencesDto,
-  UserResponseDto,
-  UserListResponseDto,
-  UserQueryDto,
-  UserRole,
-  UserStatus,
-} from "./dto/user.dto";
+// prettier-ignore
+import { CreateUserDto, UpdateUserDto, UpdateUserPreferencesDto, UserResponseDto, UserListResponseDto, UserQueryDto, UserRole, UserStatus} from "./dto/user.dto";
 
 @Controller("users")
 @UseGuards(JwtAuthGuard, RolesGuard)

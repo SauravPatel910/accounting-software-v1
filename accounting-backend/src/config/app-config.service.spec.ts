@@ -1,16 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigModule } from "@nestjs/config";
 import { AppConfigService } from "../app-config.service";
-import {
-  appConfig,
-  databaseConfig,
-  supabaseConfig,
-  jwtConfig,
-  securityConfig,
-  emailConfig,
-  fileUploadConfig,
-  businessConfig,
-} from "../config";
+// prettier-ignore
+import { appConfig, databaseConfig, supabaseConfig, jwtConfig, securityConfig, emailConfig, fileUploadConfig, businessConfig } from "../config";
 
 describe("AppConfigService", () => {
   let service: AppConfigService;

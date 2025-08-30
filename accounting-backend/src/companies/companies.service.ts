@@ -1,28 +1,9 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from "@nestjs/common";
+// prettier-ignore
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from "@nestjs/common";
 import { CustomLoggerService } from "../logging/logger.service";
 import { SupabaseService } from "../shared/services/supabase.service";
-import {
-  CreateCompanyDto,
-  UpdateCompanyDto,
-  UpdateCompanySettingsDto,
-  UpdateCompanyPreferencesDto,
-  UpdateSubscriptionDto,
-  CompanyResponseDto,
-  CompanyListResponseDto,
-  CompanyQueryDto,
-  CompanyStatus,
-  SubscriptionTier,
-  BillingCycle,
-  CompanyAddressDto,
-  CompanySettingsDto,
-  CompanyPreferencesDto,
-  SubscriptionDto,
-} from "./dto/company.dto";
+// prettier-ignore
+import { CreateCompanyDto, UpdateCompanyDto, UpdateCompanySettingsDto, UpdateCompanyPreferencesDto, UpdateSubscriptionDto, CompanyResponseDto, CompanyListResponseDto, CompanyQueryDto, CompanyStatus, SubscriptionTier, BillingCycle, CompanyAddressDto, CompanySettingsDto, CompanyPreferencesDto, SubscriptionDto } from "./dto/company.dto";
 
 export interface CompanyEntity {
   id: string;

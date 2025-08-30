@@ -1,10 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { WinstonModule } from "nest-winston";
-import {
-  createWinstonTransports,
-  LoggingConfig,
-} from "../config/logging.config";
+// prettier-ignore
+import { createWinstonTransports, LoggingConfig } from "../config/logging.config";
 import { CustomLoggerService } from "./logger.service";
 
 @Module({

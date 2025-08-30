@@ -1,27 +1,12 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-  ConflictException,
-} from "@nestjs/common";
+// prettier-ignore
+import { Injectable, UnauthorizedException, BadRequestException, ConflictException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { SupabaseService } from "../shared/services/supabase.service";
-import {
-  LoginDto,
-  RegisterDto,
-  RefreshTokenDto,
-  ChangePasswordDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
-} from "./dto/auth.dto";
-import {
-  AuthResponse,
-  JwtPayload,
-  UserData,
-  UserRole,
-  SupabaseUser,
-} from "./types/auth.types";
+// prettier-ignore
+import { LoginDto, RegisterDto, RefreshTokenDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from "./dto/auth.dto";
+// prettier-ignore
+import { AuthResponse, JwtPayload, UserData, UserRole, SupabaseUser } from "./types/auth.types";
 
 @Injectable()
 export class AuthService {

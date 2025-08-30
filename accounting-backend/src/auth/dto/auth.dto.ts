@@ -1,11 +1,5 @@
-import {
-  IsEmail,
-  IsString,
-  MinLength,
-  MaxLength,
-  IsOptional,
-  IsUUID,
-} from "class-validator";
+// prettier-ignore
+import { IsEmail, IsString, MinLength, MaxLength, IsOptional, IsUUID } from "class-validator";
 import { Transform } from "class-transformer";
 
 export class LoginDto {

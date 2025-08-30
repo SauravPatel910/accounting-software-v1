@@ -1,17 +1,6 @@
 import { useState } from "react";
-import {
-  TextInput,
-  PasswordInput,
-  Paper,
-  Title,
-  Text,
-  Container,
-  Button,
-  Group,
-  Anchor,
-  Stack,
-  Alert,
-} from "@mantine/core";
+// prettier-ignore
+import { TextInput, PasswordInput, Paper, Title, Text, Container, Button, Group, Anchor, Stack, Alert } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useAuth } from "../../hooks/useAuth";
@@ -77,18 +66,8 @@ export function LoginForm({ onToggleForm }: LoginFormProps) {
               </Alert>
             )}
 
-            <TextInput
-              label="Email"
-              placeholder="your@email.com"
-              required
-              {...form.getInputProps("email")}
-            />
-            <PasswordInput
-              label="Password"
-              placeholder="Your password"
-              required
-              {...form.getInputProps("password")}
-            />
+            <TextInput label="Email" placeholder="your@email.com" required {...form.getInputProps("email")} />
+            <PasswordInput label="Password" placeholder="Your password" required {...form.getInputProps("password")} />
           </Stack>
 
           <Group justify="space-between" mt="lg">

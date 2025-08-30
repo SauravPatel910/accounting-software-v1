@@ -1,17 +1,6 @@
 import { useState } from "react";
-import {
-  TextInput,
-  PasswordInput,
-  Paper,
-  Title,
-  Text,
-  Container,
-  Button,
-  Group,
-  Anchor,
-  Stack,
-  Alert,
-} from "@mantine/core";
+// prettier-ignore
+import { TextInput, PasswordInput, Paper, Title, Text, Container, Button, Group, Anchor, Stack, Alert } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconInfoCircle, IconCheck } from "@tabler/icons-react";
 import { useAuth } from "../../hooks/useAuth";
@@ -114,18 +103,8 @@ export function RegisterForm({ onToggleForm }: RegisterFormProps) {
             )}
 
             <Group grow>
-              <TextInput
-                label="First Name"
-                placeholder="John"
-                required
-                {...form.getInputProps("firstName")}
-              />
-              <TextInput
-                label="Last Name"
-                placeholder="Doe"
-                required
-                {...form.getInputProps("lastName")}
-              />
+              <TextInput label="First Name" placeholder="John" required {...form.getInputProps("firstName")} />
+              <TextInput label="Last Name" placeholder="Doe" required {...form.getInputProps("lastName")} />
             </Group>
 
             <TextInput
@@ -135,19 +114,9 @@ export function RegisterForm({ onToggleForm }: RegisterFormProps) {
               {...form.getInputProps("companyName")}
             />
 
-            <TextInput
-              label="Email"
-              placeholder="your@email.com"
-              required
-              {...form.getInputProps("email")}
-            />
+            <TextInput label="Email" placeholder="your@email.com" required {...form.getInputProps("email")} />
 
-            <PasswordInput
-              label="Password"
-              placeholder="Your password"
-              required
-              {...form.getInputProps("password")}
-            />
+            <PasswordInput label="Password" placeholder="Your password" required {...form.getInputProps("password")} />
 
             <PasswordInput
               label="Confirm Password"

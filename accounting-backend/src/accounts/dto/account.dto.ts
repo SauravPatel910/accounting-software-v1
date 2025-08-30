@@ -1,16 +1,5 @@
-import {
-  IsString,
-  IsEnum,
-  IsOptional,
-  IsNumber,
-  IsBoolean,
-  IsNotEmpty,
-  MaxLength,
-  MinLength,
-  Min,
-  Max,
-  IsDateString,
-} from "class-validator";
+// prettier-ignore
+import { IsString, IsEnum, IsOptional, IsNumber, IsBoolean, IsNotEmpty, MaxLength, MinLength, Min, Max, IsDateString } from "class-validator";
 import { Transform } from "class-transformer";
 
 export enum AccountType {

@@ -1,30 +1,11 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ConflictException,
-} from "@nestjs/common";
+// prettier-ignore
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from "@nestjs/common";
 import { SupabaseService } from "../shared/services/supabase.service";
 import { CustomLoggerService } from "../logging/logger.service";
-import {
-  CreateAccountDto,
-  UpdateAccountDto,
-  AccountResponseDto,
-  AccountQueryDto,
-  AccountListResponseDto,
-  AccountHierarchyDto,
-  AccountBalanceDto,
-  GenerateAccountCodeDto,
-  AccountCodeResponseDto,
-  BulkAccountOperationDto,
-  AccountType,
-  AccountSubType,
-  AccountStatus,
-} from "./dto/account.dto";
-import type {
-  DatabaseAccount,
-  TransactionEntry,
-} from "./interfaces/database-account.interface";
+// prettier-ignore
+import { CreateAccountDto, UpdateAccountDto, AccountResponseDto, AccountQueryDto, AccountListResponseDto, AccountHierarchyDto, AccountBalanceDto, GenerateAccountCodeDto, AccountCodeResponseDto, BulkAccountOperationDto, AccountType, AccountSubType, AccountStatus } from "./dto/account.dto";
+// prettier-ignore
+import type { DatabaseAccount, TransactionEntry } from "./interfaces/database-account.interface";
 import Decimal from "decimal.js";
 
 @Injectable()

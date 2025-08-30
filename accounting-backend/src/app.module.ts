@@ -14,6 +14,7 @@ import { UsersModule } from "./users/users.module";
 import { CompaniesModule } from "./companies/companies.module";
 import { AccountsModule } from "./accounts/accounts.module";
 import { TransactionsModule } from "./transactions/transactions.module";
+import { InvoicesModule } from "./invoices/invoices.module";
 // prettier-ignore
 import { appConfig, databaseConfig, supabaseConfig, jwtConfig, securityConfig, emailConfig, fileUploadConfig, businessConfig, loggingConfig } from "./config";
 
@@ -50,6 +51,7 @@ import { appConfig, databaseConfig, supabaseConfig, jwtConfig, securityConfig, e
     CompaniesModule,
     AccountsModule,
     TransactionsModule,
+    InvoicesModule,
   ],
   controllers: [AppController],
   providers: [

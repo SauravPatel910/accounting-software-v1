@@ -1,33 +1,9 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsNumber,
-  IsEnum,
-  IsArray,
-  ValidateNested,
-  IsBoolean,
-  Min,
-  Max,
-  ArrayMinSize,
-  IsObject,
-  IsUUID,
-  Matches,
-  Length,
-  IsDateString,
-  IsIn,
-} from "class-validator";
+// prettier-ignore
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsArray, ValidateNested, IsBoolean, Min, Max, ArrayMinSize, IsObject, IsUUID, Matches, Length, IsDateString, IsIn } from "class-validator";
 import { Type, Transform } from "class-transformer";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import {
-  TransactionType,
-  TransactionStatus,
-  ApprovalStatus,
-  ReconciliationStatus,
-  BatchStatus,
-  ValidationError,
-  ValidationWarning,
-} from "../interfaces/transaction.interface";
+// prettier-ignore
+import { TransactionType, TransactionStatus, ApprovalStatus, ReconciliationStatus, BatchStatus, ValidationError, ValidationWarning } from "../interfaces/transaction.interface";
 import type { RecurringRule } from "../interfaces/transaction.interface";
 import { UserRole } from "../../auth/types/auth.types";
 

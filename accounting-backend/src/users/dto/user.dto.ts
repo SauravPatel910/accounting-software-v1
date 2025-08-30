@@ -1,14 +1,5 @@
-import {
-  IsEmail,
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsUUID,
-  ValidateNested,
-  IsBoolean,
-  MinLength,
-  MaxLength,
-} from "class-validator";
+// prettier-ignore
+import { IsEmail, IsString, IsOptional, IsEnum, IsUUID, ValidateNested, IsBoolean, MinLength, MaxLength } from "class-validator";
 import { Type } from "class-transformer";
 import { UserRole } from "../../auth/types/auth.types";
 
