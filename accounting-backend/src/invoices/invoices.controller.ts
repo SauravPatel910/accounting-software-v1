@@ -3,7 +3,7 @@ import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Request } 
 // prettier-ignore
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { InvoicesService } from "./invoices-simple.service";
+import { InvoicesService } from "./invoices.service";
 // prettier-ignore
 import { CreateInvoiceDto, UpdateInvoiceStatusDto, RecordPaymentDto, InvoiceQueryDto } from "./dto/invoice.dto";
 import { InvoiceResponseDto } from "./interfaces/invoice.interface";
