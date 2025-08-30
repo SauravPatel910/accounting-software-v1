@@ -1,5 +1,15 @@
 // prettier-ignore
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe, ValidationPipe } from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiBody,
+  ApiBearerAuth,
+  ApiExtraModels,
+  getSchemaPath,
+} from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
@@ -7,15 +17,78 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { UsersService } from "./users.service";
 // prettier-ignore
 import { CreateUserDto, UpdateUserDto, UpdateUserPreferencesDto, UserResponseDto, UserListResponseDto, UserQueryDto, UserRole, UserStatus} from "./dto/user.dto";
+import {
+  ApiResponseDto,
+  ErrorResponseDto,
+} from "../common/dto/api-response.dto";
 
 @Controller("users")
+@ApiTags("Users")
+@ApiBearerAuth("JWT-auth")
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiExtraModels(UserResponseDto, UserListResponseDto, ErrorResponseDto)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "Create a new user",
+    description:
+      "Creates a new user account. Only administrators can create users.",
+  })
+  @ApiBody({
+    type: CreateUserDto,
+    description: "User creation data",
+    examples: {
+      example1: {
+        summary: "Basic user creation",
+        value: {
+          email: "john.doe@company.com",
+          firstName: "John",
+          lastName: "Doe",
+          role: UserRole.USER,
+          companyId: "123e4567-e89b-12d3-a456-426614174000",
+          phone: "+1-555-0123",
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: "User created successfully",
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ApiResponseDto) },
+        {
+          properties: {
+            data: { $ref: getSchemaPath(UserResponseDto) },
+          },
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid input data",
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized - Invalid or missing token",
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Insufficient permissions",
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: "Conflict - Email already exists",
+    type: ErrorResponseDto,
+  })
   async create(
     @Body(ValidationPipe) createUserDto: CreateUserDto,
   ): Promise<UserResponseDto> {
@@ -24,6 +97,68 @@ export class UsersController {
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiOperation({
+    summary: "Get all users",
+    description:
+      "Retrieves a paginated list of users with optional filters. Accessible by administrators and managers.",
+  })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    description: "Page number (1-based)",
+    example: 1,
+    type: Number,
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "Number of items per page",
+    example: 20,
+    type: Number,
+  })
+  @ApiQuery({
+    name: "search",
+    required: false,
+    description: "Search by name or email",
+    example: "john",
+    type: String,
+  })
+  @ApiQuery({
+    name: "role",
+    required: false,
+    description: "Filter by user role",
+    enum: UserRole,
+  })
+  @ApiQuery({
+    name: "status",
+    required: false,
+    description: "Filter by user status",
+    enum: UserStatus,
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Users retrieved successfully",
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ApiResponseDto) },
+        {
+          properties: {
+            data: { $ref: getSchemaPath(UserListResponseDto) },
+          },
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized - Invalid or missing token",
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Insufficient permissions",
+    type: ErrorResponseDto,
+  })
   async findAll(
     @Query(ValidationPipe) query: UserQueryDto,
   ): Promise<UserListResponseDto> {
@@ -31,6 +166,30 @@ export class UsersController {
   }
 
   @Get("me")
+  @ApiOperation({
+    summary: "Get current user profile",
+    description:
+      "Retrieves the profile information of the currently authenticated user.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "User profile retrieved successfully",
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ApiResponseDto) },
+        {
+          properties: {
+            data: { $ref: getSchemaPath(UserResponseDto) },
+          },
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized - Invalid or missing token",
+    type: ErrorResponseDto,
+  })
   async getProfile(
     @CurrentUser() user: { userId: string },
   ): Promise<UserResponseDto> {
