@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
-  UnprocessableEntityException,
 } from "@nestjs/common";
 import { SupabaseService } from "../shared/services/supabase.service";
 import { CustomLoggerService } from "../logging/logger.service";
@@ -11,7 +10,6 @@ import {
   CreateTransactionDto,
   UpdateTransactionDto,
   TransactionQueryDto,
-  BatchTransactionDto,
   ReconciliationDto,
   TransactionResponseDto,
   TransactionListResponseDto,
@@ -36,10 +34,10 @@ import {
   TransactionValidationResult,
   ValidationError,
   ValidationWarning,
-  ReconciliationMatch,
-  MatchType,
 } from "./interfaces/transaction.interface";
 import Decimal from "decimal.js";
+
+type DecimalType = InstanceType<typeof Decimal>;
 
 @Injectable()
 export class TransactionsService {
@@ -82,9 +80,8 @@ export class TransactionsService {
       ).toNumber();
 
       // Determine fiscal year and period
-      const { fiscalYear, fiscalPeriod } = await this.getFiscalPeriod(
+      const { fiscalYear, fiscalPeriod } = this.getFiscalPeriod(
         createTransactionDto.transactionDate,
-        companyId,
       );
 
       const transactionData: Partial<DatabaseTransaction> = {
@@ -148,9 +145,7 @@ export class TransactionsService {
         "TransactionsService",
       );
 
-      const response = this.mapTransactionToResponseDto(
-        transaction,
-      );
+      const response = this.mapTransactionToResponseDto(transaction);
       response.entries = entries.map((entry) =>
         this.mapEntryToResponseDto(entry),
       );
@@ -284,11 +279,14 @@ export class TransactionsService {
       const mappedTransactions = transactions.map(
         (transaction: DatabaseTransaction) => {
           const mapped = this.mapTransactionToResponseDto(transaction);
-          if ((transaction as any).transaction_entries) {
-            mapped.entries = (
-              (transaction as any)
-                .transaction_entries as DatabaseTransactionEntry[]
-            ).map((entry: any) => this.mapEntryToResponseDto(entry));
+          const transactionWithEntries = transaction as DatabaseTransaction & {
+            transaction_entries?: DatabaseTransactionEntry[];
+          };
+          if (transactionWithEntries.transaction_entries) {
+            mapped.entries = transactionWithEntries.transaction_entries.map(
+              (entry: DatabaseTransactionEntry) =>
+                this.mapEntryToResponseDto(entry),
+            );
           }
           return mapped;
         },
@@ -386,7 +384,6 @@ export class TransactionsService {
     id: string,
     updateTransactionDto: UpdateTransactionDto,
     companyId: string,
-    userId: string,
   ): Promise<TransactionResponseDto> {
     try {
       // Verify transaction exists and is editable
@@ -501,9 +498,7 @@ export class TransactionsService {
         "TransactionsService",
       );
 
-      const response = this.mapTransactionToResponseDto(
-        updatedTransaction,
-      );
+      const response = this.mapTransactionToResponseDto(updatedTransaction);
       if (validationResult) {
         response.validationResult =
           this.mapValidationResultToDto(validationResult);
@@ -651,32 +646,11 @@ export class TransactionsService {
 
       // Update account balances
       if (transaction.entries) {
-        await this.updateAccountBalances(
-          transaction.entries.map((entry) => ({
-            id: entry.id,
-            transaction_id: entry.transactionId,
-            account_id: entry.accountId,
-            debit_amount: entry.debitAmount,
-            credit_amount: entry.creditAmount,
-            amount: entry.amount,
-            description: entry.description,
-            reference: entry.reference,
-            tax_code: entry.taxCode,
-            tax_amount: entry.taxAmount,
-            project_id: entry.projectId,
-            cost_center_id: entry.costCenterId,
-            department_id: entry.departmentId,
-            line_number: entry.lineNumber,
-            created_at: entry.createdAt.toISOString(),
-            updated_at: entry.updatedAt.toISOString(),
-          })),
-        );
+        this.updateAccountBalances();
       }
 
       this.logger.log("Transaction posted successfully", "TransactionsService");
-      return this.mapTransactionToResponseDto(
-        updatedTransaction,
-      );
+      return this.mapTransactionToResponseDto(updatedTransaction);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -742,12 +716,9 @@ export class TransactionsService {
         createBatchDto.transactions,
         companyId,
         userId,
-        createBatchDto.autoPost || false,
       );
 
-      return this.mapBatchToProcessingResultDto(
-        batch,
-      );
+      return this.mapBatchToProcessingResultDto(batch);
     } catch (error) {
       this.logger.error(
         "Error creating batch transactions",
@@ -784,9 +755,7 @@ export class TransactionsService {
         throw new NotFoundException("Batch not found");
       }
 
-      return this.mapBatchToProcessingResultDto(
-        batch,
-      );
+      return this.mapBatchToProcessingResultDto(batch);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -952,18 +921,18 @@ export class TransactionsService {
         throw new BadRequestException("Failed to reconcile transactions");
       }
 
-      const totalReconciledAmount =
-        transactions?.reduce(
-          (sum: number, t: any) =>
-            sum +
-            parseFloat(
-              (t as DatabaseTransaction).total_amount?.toString() ?? "0",
-            ),
-          0,
-        ) || 0;
+      let totalReconciledAmount = 0;
+      if (transactions) {
+        for (const t of transactions) {
+          const transaction = t as DatabaseTransaction;
+          totalReconciledAmount += parseFloat(
+            transaction.total_amount?.toString() ?? "0",
+          );
+        }
+      }
       const reconciledTransactions =
-        transactions?.map((t: any) =>
-          this.mapTransactionToResponseDto(t as DatabaseTransaction),
+        transactions?.map((t: DatabaseTransaction) =>
+          this.mapTransactionToResponseDto(t),
         ) || [];
 
       // Create reconciliation record (implement if you have a reconciliations table)
@@ -976,7 +945,7 @@ export class TransactionsService {
         reconciliationId: `reconciliation_${Date.now()}`,
         accountId: reconciliationDto.accountId,
         reconciledTransactions,
-        totalReconciledAmount: totalReconciledAmount as number,
+        totalReconciledAmount,
         reconciledCount: reconciliationDto.transactionIds.length,
         unreconciledCount: 0, // Could calculate this if needed
         reconciliationDate: new Date(),
@@ -1122,26 +1091,40 @@ export class TransactionsService {
 
       // Calculate balances for each account
       const trialBalance = (balances || []).map((account: any) => {
-        const entries = Array.isArray(account?.transaction_entries)
-          ? account.transaction_entries
+        const accountTyped = account as {
+          id?: string | number;
+          code?: string;
+          name?: string;
+          type?: string;
+          sub_type?: string;
+          transaction_entries?: Array<{
+            debit_amount?: number;
+            credit_amount?: number;
+          }>;
+        };
+
+        const entries = Array.isArray(accountTyped.transaction_entries)
+          ? accountTyped.transaction_entries
           : [];
-        const debitTotal = entries.reduce((sum: number, entry: any) => {
+
+        const debitTotal = entries.reduce((sum: number, entry) => {
           const debitAmount =
-            typeof entry?.debit_amount === "number" ? entry.debit_amount : 0;
+            typeof entry.debit_amount === "number" ? entry.debit_amount : 0;
           return sum + debitAmount;
         }, 0);
-        const creditTotal = entries.reduce((sum: number, entry: any) => {
+
+        const creditTotal = entries.reduce((sum: number, entry) => {
           const creditAmount =
-            typeof entry?.credit_amount === "number" ? entry.credit_amount : 0;
+            typeof entry.credit_amount === "number" ? entry.credit_amount : 0;
           return sum + creditAmount;
         }, 0);
 
         return {
-          accountId: String(account?.id || ""),
-          accountCode: String(account?.code || ""),
-          accountName: String(account?.name || ""),
-          accountType: String(account?.type || ""),
-          accountSubType: String(account?.sub_type || ""),
+          accountId: String(accountTyped.id || ""),
+          accountCode: String(accountTyped.code || ""),
+          accountName: String(accountTyped.name || ""),
+          accountType: String(accountTyped.type || ""),
+          accountSubType: String(accountTyped.sub_type || ""),
           debitBalance: debitTotal,
           creditBalance: creditTotal,
           netBalance: debitTotal - creditTotal,
@@ -1152,12 +1135,12 @@ export class TransactionsService {
         asOfDate,
         accounts: trialBalance,
         totalDebits: trialBalance.reduce(
-          (sum: number, acc: any) =>
+          (sum: number, acc) =>
             sum + (typeof acc.debitBalance === "number" ? acc.debitBalance : 0),
           0,
         ),
         totalCredits: trialBalance.reduce(
-          (sum: number, acc: any) =>
+          (sum: number, acc) =>
             sum +
             (typeof acc.creditBalance === "number" ? acc.creditBalance : 0),
           0,
@@ -1208,19 +1191,36 @@ export class TransactionsService {
 
       let runningBalance = 0;
       const activities = (activity || []).map((entry: any) => {
-        const amount = (entry.debit_amount || 0) - (entry.credit_amount || 0);
+        const entryTyped = entry as {
+          transaction_id?: string;
+          debit_amount?: number;
+          credit_amount?: number;
+          description?: string;
+          transactions?: {
+            transaction_number?: string;
+            transaction_date?: string;
+            description?: string;
+            status?: string;
+          };
+        };
+
+        const amount =
+          (entryTyped.debit_amount || 0) - (entryTyped.credit_amount || 0);
         runningBalance += amount;
 
         return {
-          transactionId: entry.transaction_id,
-          transactionNumber: entry.transactions.transaction_number,
-          transactionDate: entry.transactions.transaction_date,
-          description: entry.description || entry.transactions.description,
-          debitAmount: entry.debit_amount,
-          creditAmount: entry.credit_amount,
+          transactionId: entryTyped.transaction_id || "",
+          transactionNumber: entryTyped.transactions?.transaction_number || "",
+          transactionDate: entryTyped.transactions?.transaction_date || "",
+          description:
+            entryTyped.description ||
+            entryTyped.transactions?.description ||
+            "",
+          debitAmount: entryTyped.debit_amount || 0,
+          creditAmount: entryTyped.credit_amount || 0,
           amount,
           runningBalance,
-          status: entry.transactions.status,
+          status: entryTyped.transactions?.status || "",
         };
       });
 
@@ -1274,8 +1274,14 @@ export class TransactionsService {
     let totalCredits = new Decimal(0);
 
     for (const [index, entry] of entries.entries()) {
-      const debit = new Decimal(entry.debitAmount || 0);
-      const credit = new Decimal(entry.creditAmount || 0);
+      const entryTyped = entry as {
+        debitAmount?: number;
+        creditAmount?: number;
+        accountId?: string;
+      };
+
+      const debit = new Decimal(entryTyped.debitAmount || 0);
+      const credit = new Decimal(entryTyped.creditAmount || 0);
 
       // Check that entry has either debit or credit (but not both)
       if (debit.greaterThan(0) && credit.greaterThan(0)) {
@@ -1299,7 +1305,7 @@ export class TransactionsService {
 
       // Verify account exists and allows direct transactions
       await this.validateAccountForTransaction(
-        entry.accountId,
+        entryTyped.accountId || "",
         companyId,
         index,
         errors,
@@ -1383,7 +1389,7 @@ export class TransactionsService {
           value: accountId,
         });
       }
-    } catch (error) {
+    } catch {
       errors.push({
         field: `entries[${entryIndex}].accountId`,
         message: "Error validating account",
@@ -1413,7 +1419,8 @@ export class TransactionsService {
 
     let nextNumber = 1;
     if (lastTransaction) {
-      const lastNumber = parseInt(lastTransaction.transaction_number.slice(-6));
+      const transactionNumber = lastTransaction.transaction_number as string;
+      const lastNumber = parseInt(transactionNumber.slice(-6));
       nextNumber = lastNumber + 1;
     }
 
@@ -1438,20 +1445,25 @@ export class TransactionsService {
     return prefixes[transactionType] || "TXN";
   }
 
-  private calculateTotalAmount(entries: any[]): InstanceType<typeof Decimal> {
-    return entries
-      .reduce((total, entry) => {
-        const debit = new Decimal(entry.debitAmount || 0);
-        const credit = new Decimal(entry.creditAmount || 0);
-        return total.plus(debit).plus(credit);
-      }, new Decimal(0))
-      .dividedBy(2); // Divide by 2 since we count both debits and credits
+  private calculateTotalAmount(entries: any[]): DecimalType {
+    let total = new Decimal(0);
+    for (const entry of entries) {
+      const entryTyped = entry as {
+        debitAmount?: number;
+        creditAmount?: number;
+      };
+      const debit = new Decimal(entryTyped.debitAmount || 0);
+      const credit = new Decimal(entryTyped.creditAmount || 0);
+      total = total.plus(debit).plus(credit);
+    }
+
+    return total.dividedBy(2); // Divide by 2 since we count both debits and credits
   }
 
-  private async getFiscalPeriod(
-    transactionDate: string,
-    companyId: string,
-  ): Promise<{ fiscalYear: number; fiscalPeriod: number }> {
+  private getFiscalPeriod(transactionDate: string): {
+    fiscalYear: number;
+    fiscalPeriod: number;
+  } {
     // Simple implementation - you can enhance this based on company's fiscal year settings
     const date = new Date(transactionDate);
     return {
@@ -1466,21 +1478,36 @@ export class TransactionsService {
   ): Promise<DatabaseTransactionEntry[]> {
     const supabase = this.supabaseService.getClient();
 
-    const entriesData = entries.map((entry, index) => ({
-      transaction_id: transactionId,
-      account_id: entry.accountId,
-      debit_amount: entry.debitAmount || 0,
-      credit_amount: entry.creditAmount || 0,
-      amount: (entry.debitAmount || 0) - (entry.creditAmount || 0),
-      description: entry.description,
-      reference: entry.reference,
-      tax_code: entry.taxCode,
-      tax_amount: entry.taxAmount || 0,
-      project_id: entry.projectId,
-      cost_center_id: entry.costCenterId,
-      department_id: entry.departmentId,
-      line_number: index + 1,
-    }));
+    const entriesData = entries.map((entry, index) => {
+      const entryTyped = entry as {
+        accountId?: string;
+        debitAmount?: number;
+        creditAmount?: number;
+        description?: string;
+        reference?: string;
+        taxCode?: string;
+        taxAmount?: number;
+        projectId?: string;
+        costCenterId?: string;
+        departmentId?: string;
+      };
+
+      return {
+        transaction_id: transactionId,
+        account_id: entryTyped.accountId || "",
+        debit_amount: entryTyped.debitAmount || 0,
+        credit_amount: entryTyped.creditAmount || 0,
+        amount: (entryTyped.debitAmount || 0) - (entryTyped.creditAmount || 0),
+        description: entryTyped.description || "",
+        reference: entryTyped.reference || "",
+        tax_code: entryTyped.taxCode || "",
+        tax_amount: entryTyped.taxAmount || 0,
+        project_id: entryTyped.projectId || "",
+        cost_center_id: entryTyped.costCenterId || "",
+        department_id: entryTyped.departmentId || "",
+        line_number: index + 1,
+      };
+    });
 
     const { data: createdEntries, error } = await supabase
       .from("transaction_entries")
@@ -1494,9 +1521,7 @@ export class TransactionsService {
     return createdEntries as DatabaseTransactionEntry[];
   }
 
-  private async updateAccountBalances(
-    entries: DatabaseTransactionEntry[],
-  ): Promise<void> {
+  private updateAccountBalances(): void {
     // Implementation to update account current_balance
     // This would involve getting current balances and updating them
     // For now, we'll skip this implementation detail
@@ -1521,33 +1546,24 @@ export class TransactionsService {
   private calculateTransactionsTotals(
     transactions: any[],
   ): TransactionTotalsDto {
-    const totalDebit = transactions.reduce((sum, txn) => {
-      if (txn.transaction_entries) {
-        return (
-          sum +
-          txn.transaction_entries.reduce(
-            (entrySum: number, entry: any) =>
-              entrySum + (entry.debit_amount || 0),
-            0,
-          )
-        );
-      }
-      return sum;
-    }, 0);
+    let totalDebit = 0;
+    let totalCredit = 0;
 
-    const totalCredit = transactions.reduce((sum, txn) => {
-      if (txn.transaction_entries) {
-        return (
-          sum +
-          txn.transaction_entries.reduce(
-            (entrySum: number, entry: any) =>
-              entrySum + (entry.credit_amount || 0),
-            0,
-          )
-        );
+    for (const txn of transactions) {
+      const txnTyped = txn as {
+        transaction_entries?: Array<{
+          debit_amount?: number;
+          credit_amount?: number;
+        }>;
+      };
+
+      if (txnTyped.transaction_entries) {
+        for (const entry of txnTyped.transaction_entries) {
+          totalDebit += entry.debit_amount || 0;
+          totalCredit += entry.credit_amount || 0;
+        }
       }
-      return sum;
-    }, 0);
+    }
 
     return {
       totalDebits: totalDebit,
@@ -1597,25 +1613,48 @@ export class TransactionsService {
   }
 
   private mapEntryToResponseDto(entry: any): TransactionEntryResponseDto {
+    const entryTyped = entry as {
+      id?: string;
+      transaction_id?: string;
+      account_id?: string;
+      accounts?: {
+        code?: string;
+        name?: string;
+      };
+      debit_amount?: number;
+      credit_amount?: number;
+      amount?: number;
+      description?: string;
+      reference?: string;
+      tax_code?: string;
+      tax_amount?: number;
+      project_id?: string;
+      cost_center_id?: string;
+      department_id?: string;
+      line_number?: number;
+      created_at?: string;
+      updated_at?: string;
+    };
+
     return {
-      id: entry.id,
-      transactionId: entry.transaction_id,
-      accountId: entry.account_id,
-      accountCode: entry.accounts?.code,
-      accountName: entry.accounts?.name,
-      debitAmount: entry.debit_amount,
-      creditAmount: entry.credit_amount,
-      amount: entry.amount,
-      description: entry.description,
-      reference: entry.reference,
-      taxCode: entry.tax_code,
-      taxAmount: entry.tax_amount,
-      projectId: entry.project_id,
-      costCenterId: entry.cost_center_id,
-      departmentId: entry.department_id,
-      lineNumber: entry.line_number,
-      createdAt: new Date(entry.created_at),
-      updatedAt: new Date(entry.updated_at),
+      id: entryTyped.id || "",
+      transactionId: entryTyped.transaction_id || "",
+      accountId: entryTyped.account_id || "",
+      accountCode: entryTyped.accounts?.code || "",
+      accountName: entryTyped.accounts?.name || "",
+      debitAmount: entryTyped.debit_amount || 0,
+      creditAmount: entryTyped.credit_amount || 0,
+      amount: entryTyped.amount || 0,
+      description: entryTyped.description || "",
+      reference: entryTyped.reference || "",
+      taxCode: entryTyped.tax_code || "",
+      taxAmount: entryTyped.tax_amount || 0,
+      projectId: entryTyped.project_id || "",
+      costCenterId: entryTyped.cost_center_id || "",
+      departmentId: entryTyped.department_id || "",
+      lineNumber: entryTyped.line_number || 0,
+      createdAt: new Date(entryTyped.created_at || new Date().toISOString()),
+      updatedAt: new Date(entryTyped.updated_at || new Date().toISOString()),
     };
   }
 
@@ -1634,7 +1673,8 @@ export class TransactionsService {
 
     let nextNumber = 1;
     if (lastBatch) {
-      const lastNumber = parseInt(lastBatch.batch_number.slice(-6));
+      const batchNumber = lastBatch.batch_number as string;
+      const lastNumber = parseInt(batchNumber.slice(-6));
       nextNumber = lastNumber + 1;
     }
 
@@ -1646,7 +1686,6 @@ export class TransactionsService {
     transactions: CreateTransactionDto[],
     companyId: string,
     userId: string,
-    autoPost: boolean,
   ): Promise<void> {
     // This would typically be processed in a background job
     // For now, we'll process synchronously
@@ -1747,27 +1786,35 @@ export class TransactionsService {
     try {
       const supabase = this.supabaseService.getClient();
 
-      const { data: batch, error } = await supabase
+      const response = await supabase
         .from("batch_transactions")
         .select("*")
         .eq("id", batchId)
         .eq("company_id", companyId)
         .single();
 
-      if (error || !batch) {
+      const batchData = response.data as {
+        status?: string;
+        processed_count?: number;
+        total_count?: number;
+        errors?: any[];
+      } | null;
+      const error = response.error;
+
+      if (error || !batchData) {
         throw new NotFoundException("Batch not found");
       }
 
       return {
-        status: batch.status,
-        processedCount: batch.processed_count || 0,
-        totalCount: batch.total_count || 0,
-        errors: batch.errors || [],
+        status: batchData.status || "",
+        processedCount: batchData.processed_count || 0,
+        totalCount: batchData.total_count || 0,
+        errors: batchData.errors || [],
       };
     } catch (error) {
       this.logger.error(
         "Error getting batch status",
-        error,
+        error instanceof Error ? error.message : String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to get batch status");
@@ -1799,7 +1846,7 @@ export class TransactionsService {
         .contains("entries", [{ account_id: accountId }])
         .neq("reconciliation_status", ReconciliationStatus.RECONCILED);
 
-      const { data: lastReconciliation, error: lastError } = await supabase
+      const { data: lastReconciliation } = await supabase
         .from("transactions")
         .select("reconciled_at")
         .eq("company_id", companyId)
@@ -1813,15 +1860,19 @@ export class TransactionsService {
         throw new BadRequestException("Failed to get reconciliation status");
       }
 
+      const lastReconciliationDate = lastReconciliation as {
+        reconciled_at?: string;
+      } | null;
+
       return {
         reconciledCount: reconciled?.length || 0,
         unreconciledCount: unreconciled?.length || 0,
-        lastReconciliation: lastReconciliation?.reconciled_at || null,
+        lastReconciliation: lastReconciliationDate?.reconciled_at || null,
       };
     } catch (error) {
       this.logger.error(
         "Error getting reconciliation status",
-        error,
+        error instanceof Error ? error.message : String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to get reconciliation status");
@@ -1834,17 +1885,23 @@ export class TransactionsService {
     companyId: string,
   ): Promise<any> {
     try {
-      const supabase = this.supabaseService.getClient();
+      const paramsTyped = params as {
+        asOfDate?: string;
+        period?: string;
+      };
 
       switch (reportType) {
         case "profit_loss":
-          return this.generateProfitLossReport(params, companyId);
+          return this.generateProfitLossReport(paramsTyped);
         case "balance_sheet":
-          return this.generateBalanceSheetReport(params, companyId);
+          return this.generateBalanceSheetReport(paramsTyped);
         case "cash_flow":
-          return this.generateCashFlowReport(params, companyId);
+          return this.generateCashFlowReport(paramsTyped);
         case "trial_balance":
-          return this.getTrialBalance(params.asOfDate, companyId);
+          return this.getTrialBalance(
+            paramsTyped.asOfDate || new Date().toISOString().split("T")[0],
+            companyId,
+          );
         default:
           throw new BadRequestException(
             `Unsupported report type: ${reportType}`,
@@ -1853,7 +1910,7 @@ export class TransactionsService {
     } catch (error) {
       this.logger.error(
         "Error generating report",
-        error,
+        error instanceof Error ? error.message : String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to generate report");
@@ -1864,6 +1921,11 @@ export class TransactionsService {
     try {
       const supabase = this.supabaseService.getClient();
 
+      const paramsTyped = params as {
+        startDate?: string;
+        endDate?: string;
+      };
+
       const { data: monthlyTrends, error: trendsError } = await supabase
         .from("transactions")
         .select("transaction_date, total_amount")
@@ -1871,42 +1933,70 @@ export class TransactionsService {
         .eq("status", TransactionStatus.POSTED)
         .gte(
           "transaction_date",
-          params.startDate ||
+          paramsTyped.startDate ||
             new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
         )
-        .lte("transaction_date", params.endDate || new Date().toISOString());
+        .lte(
+          "transaction_date",
+          paramsTyped.endDate || new Date().toISOString(),
+        );
 
       if (trendsError) {
         throw new BadRequestException("Failed to get analytics data");
       }
 
       // Group by month and calculate totals
-      const monthlyData =
-        monthlyTrends?.reduce((acc: any, transaction: any) => {
-          const month = new Date(transaction.transaction_date)
-            .toISOString()
-            .substring(0, 7);
-          if (!acc[month]) {
-            acc[month] = { month, total: 0, count: 0 };
+      const monthlyData: Record<
+        string,
+        { month: string; total: number; count: number }
+      > = {};
+
+      if (monthlyTrends) {
+        for (const transaction of monthlyTrends) {
+          const transactionTyped = transaction as {
+            transaction_date?: string;
+            total_amount?: string | number;
+          };
+
+          if (transactionTyped.transaction_date) {
+            const month = new Date(transactionTyped.transaction_date)
+              .toISOString()
+              .substring(0, 7);
+
+            if (!monthlyData[month]) {
+              monthlyData[month] = { month, total: 0, count: 0 };
+            }
+
+            const amount =
+              typeof transactionTyped.total_amount === "string"
+                ? parseFloat(transactionTyped.total_amount)
+                : transactionTyped.total_amount || 0;
+
+            monthlyData[month].total += amount;
+            monthlyData[month].count += 1;
           }
-          acc[month].total += parseFloat(transaction.total_amount);
-          acc[month].count += 1;
-          return acc;
-        }, {}) || {};
+        }
+      }
+
+      const totalAmount =
+        monthlyTrends?.reduce((sum: number, t: any) => {
+          const transactionTyped = t as { total_amount?: string | number };
+          const amount =
+            typeof transactionTyped.total_amount === "string"
+              ? parseFloat(transactionTyped.total_amount)
+              : transactionTyped.total_amount || 0;
+          return sum + amount;
+        }, 0) || 0;
 
       return {
         monthlyTrends: Object.values(monthlyData),
         totalTransactions: monthlyTrends?.length || 0,
-        totalAmount:
-          monthlyTrends?.reduce(
-            (sum: number, t: any) => sum + parseFloat(t.total_amount),
-            0,
-          ) || 0,
+        totalAmount,
       };
     } catch (error) {
       this.logger.error(
         "Error getting analytics",
-        error,
+        error instanceof Error ? error.message : String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to get analytics");
@@ -1915,9 +2005,13 @@ export class TransactionsService {
 
   async exportTransactions(companyId: string, params: any): Promise<any> {
     try {
+      const paramsTyped = params as TransactionQueryDto & {
+        format?: string;
+      };
+
       const transactions = await this.findAll(
         {
-          ...params,
+          ...paramsTyped,
           limit: 10000, // Max export limit
         },
         companyId,
@@ -1925,24 +2019,20 @@ export class TransactionsService {
 
       return {
         data: transactions.data,
-        format: params.format || "csv",
-        filename: `transactions_${companyId}_${new Date().toISOString().split("T")[0]}.${params.format || "csv"}`,
+        format: paramsTyped.format || "csv",
+        filename: `transactions_${companyId}_${new Date().toISOString().split("T")[0]}.${paramsTyped.format || "csv"}`,
       };
     } catch (error) {
       this.logger.error(
         "Error exporting transactions",
-        error,
+        error instanceof Error ? error.message : String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to export transactions");
     }
   }
 
-  async importTransactions(
-    file: any,
-    companyId: string,
-    userId: string,
-  ): Promise<any> {
+  importTransactions(): any {
     try {
       // This would typically parse CSV/Excel files
       // For now, return a placeholder response
@@ -1954,49 +2044,43 @@ export class TransactionsService {
     } catch (error) {
       this.logger.error(
         "Error importing transactions",
-        error,
+        error instanceof Error ? error.message : String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to import transactions");
     }
   }
 
-  private async generateProfitLossReport(
-    params: any,
-    companyId: string,
-  ): Promise<any> {
+  private generateProfitLossReport(params: any): any {
+    const paramsTyped = params as { period?: string };
     // Placeholder implementation
     return {
       reportType: "profit_loss",
-      period: params.period || "monthly",
+      period: paramsTyped.period || "monthly",
       revenue: 0,
       expenses: 0,
       netIncome: 0,
     };
   }
 
-  private async generateBalanceSheetReport(
-    params: any,
-    companyId: string,
-  ): Promise<any> {
+  private generateBalanceSheetReport(params: any): any {
+    const paramsTyped = params as { asOfDate?: string };
     // Placeholder implementation
     return {
       reportType: "balance_sheet",
-      asOfDate: params.asOfDate || new Date().toISOString(),
+      asOfDate: paramsTyped.asOfDate || new Date().toISOString(),
       assets: { current: 0, nonCurrent: 0, total: 0 },
       liabilities: { current: 0, nonCurrent: 0, total: 0 },
       equity: { total: 0 },
     };
   }
 
-  private async generateCashFlowReport(
-    params: any,
-    companyId: string,
-  ): Promise<any> {
+  private generateCashFlowReport(params: any): any {
+    const paramsTyped = params as { period?: string };
     // Placeholder implementation
     return {
       reportType: "cash_flow",
-      period: params.period || "monthly",
+      period: paramsTyped.period || "monthly",
       operating: 0,
       investing: 0,
       financing: 0,
@@ -2048,45 +2132,59 @@ export class TransactionsService {
       let runningBalance = 0;
       const ledgerEntries =
         entries?.map((entry: any) => {
-          const amount = (entry.debit_amount || 0) - (entry.credit_amount || 0);
+          const entryTyped = entry as {
+            debit_amount?: number;
+            credit_amount?: number;
+            transactions?: {
+              transaction_date?: string;
+              description?: string;
+              transaction_number?: string;
+            };
+          };
+          const amount =
+            (entryTyped.debit_amount || 0) - (entryTyped.credit_amount || 0);
           runningBalance += amount;
 
           return {
-            date: entry.transactions.transaction_date,
-            description: entry.transactions.description,
-            transactionNumber: entry.transactions.transaction_number,
-            debit: entry.debit_amount || 0,
-            credit: entry.credit_amount || 0,
+            date: entryTyped.transactions?.transaction_date || "",
+            description: entryTyped.transactions?.description || "",
+            transactionNumber:
+              entryTyped.transactions?.transaction_number || "",
+            debit: entryTyped.debit_amount || 0,
+            credit: entryTyped.credit_amount || 0,
             balance: runningBalance,
           };
         }) || [];
 
+      let totalDebits = 0;
+      let totalCredits = 0;
+
+      if (entries) {
+        for (const e of entries) {
+          const eTyped = e as { debit_amount?: number; credit_amount?: number };
+          totalDebits += eTyped.debit_amount || 0;
+          totalCredits += eTyped.credit_amount || 0;
+        }
+      }
+
       return {
         accountId,
         entries: ledgerEntries,
-        totalDebits:
-          entries?.reduce(
-            (sum: number, e: any) => sum + (e.debit_amount || 0),
-            0,
-          ) || 0,
-        totalCredits:
-          entries?.reduce(
-            (sum: number, e: any) => sum + (e.credit_amount || 0),
-            0,
-          ) || 0,
+        totalDebits,
+        totalCredits,
         finalBalance: runningBalance,
       };
     } catch (error) {
       this.logger.error(
         "Error getting account ledger",
-        error,
+        String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to get account ledger");
     }
   }
 
-  async getAuditLog(transactionId: string, companyId: string): Promise<any> {
+  getAuditLog(transactionId: string): any {
     try {
       // This would typically fetch from an audit_logs table
       // For now, return placeholder data
@@ -2107,7 +2205,7 @@ export class TransactionsService {
     } catch (error) {
       this.logger.error(
         "Error getting audit log",
-        error,
+        String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to get audit log");
@@ -2121,12 +2219,15 @@ export class TransactionsService {
     try {
       const supabase = this.supabaseService.getClient();
 
-      const { data: transaction, error } = await supabase
+      const result = await supabase
         .from("transactions")
         .select("*")
         .eq("id", transactionId)
         .eq("company_id", companyId)
         .single();
+
+      const transaction = result.data as DatabaseTransaction | null;
+      const error = result.error;
 
       if (error || !transaction) {
         throw new NotFoundException("Transaction not found");
@@ -2148,14 +2249,14 @@ export class TransactionsService {
     } catch (error) {
       this.logger.error(
         "Error getting transaction history",
-        error,
+        String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to get transaction history");
     }
   }
 
-  async getUserPermissions(userId: string, companyId: string): Promise<any> {
+  getUserPermissions(): any {
     try {
       // This would typically check user roles and permissions
       // For now, return basic permissions
@@ -2175,7 +2276,7 @@ export class TransactionsService {
     } catch (error) {
       this.logger.error(
         "Error getting user permissions",
-        error,
+        String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to get user permissions");
@@ -2192,20 +2293,31 @@ export class TransactionsService {
         .eq("company_id", companyId);
 
       // Add search filters based on searchParams
-      if (searchParams.description) {
-        query = query.ilike("description", `%${searchParams.description}%`);
+      const searchParamsTyped = searchParams as {
+        description?: string;
+        amountMin?: number;
+        amountMax?: number;
+        startDate?: string;
+        endDate?: string;
+      };
+
+      if (searchParamsTyped.description) {
+        query = query.ilike(
+          "description",
+          `%${searchParamsTyped.description}%`,
+        );
       }
-      if (searchParams.amountMin) {
-        query = query.gte("total_amount", searchParams.amountMin);
+      if (searchParamsTyped.amountMin) {
+        query = query.gte("total_amount", searchParamsTyped.amountMin);
       }
-      if (searchParams.amountMax) {
-        query = query.lte("total_amount", searchParams.amountMax);
+      if (searchParamsTyped.amountMax) {
+        query = query.lte("total_amount", searchParamsTyped.amountMax);
       }
-      if (searchParams.startDate) {
-        query = query.gte("transaction_date", searchParams.startDate);
+      if (searchParamsTyped.startDate) {
+        query = query.gte("transaction_date", searchParamsTyped.startDate);
       }
-      if (searchParams.endDate) {
-        query = query.lte("transaction_date", searchParams.endDate);
+      if (searchParamsTyped.endDate) {
+        query = query.lte("transaction_date", searchParamsTyped.endDate);
       }
 
       const { data: transactions, error } = await query;
@@ -2216,14 +2328,16 @@ export class TransactionsService {
 
       return {
         results:
-          transactions?.map((t) => this.mapTransactionToResponseDto(t)) || [],
+          transactions?.map((t) =>
+            this.mapTransactionToResponseDto(t as DatabaseTransaction),
+          ) || [],
         total: transactions?.length || 0,
-        searchParams,
+        searchParams: searchParamsTyped,
       };
     } catch (error) {
       this.logger.error(
         "Error in advanced search",
-        error,
+        String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Advanced search failed");
@@ -2250,29 +2364,38 @@ export class TransactionsService {
       const summary = {
         period,
         totalTransactions: transactions?.length || 0,
-        totalAmount:
-          transactions?.reduce(
-            (sum: number, t: any) => sum + parseFloat(t.total_amount),
-            0,
-          ) || 0,
-        byType: {} as any,
-        trends: {} as any,
+        totalAmount: transactions
+          ? transactions.reduce((sum: number, t: any) => {
+              const tTyped = t as { total_amount?: string | number };
+              return sum + parseFloat(String(tTyped.total_amount || "0"));
+            }, 0)
+          : 0,
+        byType: {} as Record<string, { count: number; amount: number }>,
+        trends: {} as Record<string, any>,
       };
 
       // Group by transaction type
       transactions?.forEach((t: any) => {
-        if (!summary.byType[t.transaction_type]) {
-          summary.byType[t.transaction_type] = { count: 0, amount: 0 };
+        const tTyped = t as {
+          transaction_type?: string;
+          total_amount?: string | number;
+        };
+        const transactionType = tTyped.transaction_type || "unknown";
+
+        if (!summary.byType[transactionType]) {
+          summary.byType[transactionType] = { count: 0, amount: 0 };
         }
-        summary.byType[t.transaction_type].count += 1;
-        summary.byType[t.transaction_type].amount += parseFloat(t.total_amount);
+        summary.byType[transactionType].count += 1;
+        summary.byType[transactionType].amount += parseFloat(
+          String(tTyped.total_amount || "0"),
+        );
       });
 
       return summary;
     } catch (error) {
       this.logger.error(
         "Error getting analytics summary",
-        error,
+        String(error),
         "TransactionsService",
       );
       throw new BadRequestException("Failed to get analytics summary");

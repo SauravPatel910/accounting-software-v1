@@ -132,7 +132,6 @@ export class TransactionsController {
       id,
       updateTransactionDto,
       req.user.companyId,
-      req.user.sub,
     );
   }
 
@@ -394,12 +393,10 @@ export class TransactionsController {
   @ApiParam({ name: "id", description: "Transaction ID" })
   async getAuditLog(
     @Param("id") id: string,
-    @Request() req: AuthenticatedRequest,
   ): Promise<TransactionAuditLogDto[]> {
-    return this.transactionsService.getAuditLog(
-      id,
-      req.user.companyId,
-    ) as Promise<TransactionAuditLogDto[]>;
+    return this.transactionsService.getAuditLog(id) as Promise<
+      TransactionAuditLogDto[]
+    >;
   }
 
   @Get(":id/history")
@@ -425,13 +422,8 @@ export class TransactionsController {
     description: "User permissions retrieved",
     type: UserTransactionPermissionsDto,
   })
-  async getUserPermissions(
-    @Request() req: AuthenticatedRequest,
-  ): Promise<UserTransactionPermissionsDto> {
-    return this.transactionsService.getUserPermissions(
-      req.user.sub,
-      req.user.companyId,
-    ) as Promise<UserTransactionPermissionsDto>;
+  async getUserPermissions(): Promise<UserTransactionPermissionsDto> {
+    return this.transactionsService.getUserPermissions() as Promise<UserTransactionPermissionsDto>;
   }
 
   // Search and Filter Operations
@@ -480,15 +472,8 @@ export class TransactionsController {
   @Roles(UserRole.ADMIN, UserRole.ACCOUNTANT)
   @ApiOperation({ summary: "Import transactions from file" })
   @ApiResponse({ status: 200, description: "Import completed" })
-  async importTransactions(
-    @Body() importData: any,
-    @Request() req: AuthenticatedRequest,
-  ): Promise<any> {
-    return this.transactionsService.importTransactions(
-      importData,
-      req.user.companyId,
-      req.user.sub,
-    );
+  importTransactions(): any {
+    return this.transactionsService.importTransactions();
   }
 
   @Get("export")
