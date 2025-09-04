@@ -2,10 +2,11 @@
 import { Table, Group, Text, ActionIcon, Badge, Box, Button, Paper, Card, Stack, NumberFormatter, TextInput, Select, Flex } from "@mantine/core";
 // prettier-ignore
 import { IconEdit, IconTrash, IconEye, IconPlus, IconSearch, IconBuildingBank, IconCreditCard, IconWallet, IconCoins } from "@tabler/icons-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import Decimal from "decimal.js";
 import { useCurrency } from "../../hooks/useCurrency";
+import { getBankAccounts, deleteBankAccount } from "../../services/bankAccountService";
 
 interface BankAccount {
   id: string;
@@ -20,57 +21,6 @@ interface BankAccount {
   description?: string;
 }
 
-// Mock data for demonstration
-const mockBankAccounts: BankAccount[] = [
-  {
-    id: "1",
-    name: "Business Checking",
-    accountNumber: "****1234",
-    accountType: "checking",
-    bankName: "Wells Fargo",
-    balance: 25780.5,
-    currency: "INR",
-    isActive: true,
-    lastSyncDate: new Date("2024-08-17"),
-    description: "Primary business account for daily operations",
-  },
-  {
-    id: "2",
-    name: "Savings Account",
-    accountNumber: "****5678",
-    accountType: "savings",
-    bankName: "Chase Bank",
-    balance: 150000.0,
-    currency: "INR",
-    isActive: true,
-    lastSyncDate: new Date("2024-08-16"),
-    description: "Emergency fund and tax savings",
-  },
-  {
-    id: "3",
-    name: "Business Credit Card",
-    accountNumber: "****9012",
-    accountType: "credit",
-    bankName: "American Express",
-    balance: -3450.75,
-    currency: "INR",
-    isActive: true,
-    lastSyncDate: new Date("2024-08-17"),
-    description: "Business expenses and travel",
-  },
-  {
-    id: "4",
-    name: "Petty Cash",
-    accountNumber: "CASH-001",
-    accountType: "cash",
-    bankName: "Office Cash",
-    balance: 500.0,
-    currency: "INR",
-    isActive: true,
-    description: "Small office expenses and emergencies",
-  },
-];
-
 const accountTypeConfig = {
   checking: { icon: IconBuildingBank, color: "blue", label: "Checking" },
   savings: { icon: IconCoins, color: "green", label: "Savings" },
@@ -81,9 +31,29 @@ const accountTypeConfig = {
 
 export function BankAccountList() {
   const { getCurrencySymbol } = useCurrency();
-  const [accounts, setAccounts] = useState<BankAccount[]>(mockBankAccounts);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    getBankAccounts()
+      .then((data) => {
+        if (mounted) setAccounts(data as unknown as BankAccount[]);
+      })
+      .catch((err) => {
+        console.error("Failed to load bank accounts", err);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredAccounts = accounts.filter((account) => {
     const matchesSearch =
@@ -103,7 +73,15 @@ export function BankAccountList() {
     .reduce((sum, acc) => sum.plus(Math.abs(acc.balance)), new Decimal(0));
 
   const handleDeleteAccount = (id: string) => {
-    setAccounts(accounts.filter((acc) => acc.id !== id));
+    // optimistic UI update
+    const prev = accounts;
+    setAccounts((s) => s.filter((acc) => acc.id !== id));
+
+    deleteBankAccount(id).catch((err) => {
+      console.error("Failed to delete bank account", err);
+      // rollback on error
+      setAccounts(prev);
+    });
   };
 
   const AccountIcon = ({ type }: { type: BankAccount["accountType"] }) => {
@@ -144,10 +122,7 @@ export function BankAccountList() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <Stack gap="lg">
         {/* Summary Cards */}
         <Group grow>
@@ -274,62 +249,67 @@ export function BankAccountList() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {filteredAccounts.map((account) => (
-                <Table.Tr key={account.id}>
-                  <Table.Td>
-                    <Group gap="sm">
-                      <AccountIcon type={account.accountType} />
-                      <Box>
-                        <Text fw={500}>{account.name}</Text>
-                        {account.description && (
-                          <Text size="xs" c="dimmed">
-                            {account.description}
-                          </Text>
-                        )}
-                      </Box>
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>
-                    <AccountTypeBadge type={account.accountType} />
-                  </Table.Td>
-                  <Table.Td>
-                    <Text>{account.bankName}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text ff="monospace">{account.accountNumber}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text fw={600}>{formatBalance(account.balance, account.accountType)}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    {account.lastSyncDate ? (
-                      <Text size="sm" c="dimmed">
-                        {account.lastSyncDate.toLocaleDateString()}
-                      </Text>
-                    ) : (
-                      <Text size="sm" c="red">
-                        Never
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon variant="subtle" color="blue">
-                        <IconEye size={16} />
-                      </ActionIcon>
-                      <ActionIcon variant="subtle" color="gray">
-                        <IconEdit size={16} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        onClick={() => handleDeleteAccount(account.id)}>
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    </Group>
+              {loading ? (
+                <Table.Tr>
+                  <Table.Td colSpan={7}>
+                    <Text c="dimmed">Loading accounts...</Text>
                   </Table.Td>
                 </Table.Tr>
-              ))}
+              ) : (
+                filteredAccounts.map((account) => (
+                  <Table.Tr key={account.id}>
+                    <Table.Td>
+                      <Group gap="sm">
+                        <AccountIcon type={account.accountType} />
+                        <Box>
+                          <Text fw={500}>{account.name}</Text>
+                          {account.description && (
+                            <Text size="xs" c="dimmed">
+                              {account.description}
+                            </Text>
+                          )}
+                        </Box>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>
+                      <AccountTypeBadge type={account.accountType} />
+                    </Table.Td>
+                    <Table.Td>
+                      <Text>{account.bankName}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text ff="monospace">{account.accountNumber}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text fw={600}>{formatBalance(account.balance, account.accountType)}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      {account.lastSyncDate ? (
+                        <Text size="sm" c="dimmed">
+                          {account.lastSyncDate.toLocaleDateString()}
+                        </Text>
+                      ) : (
+                        <Text size="sm" c="red">
+                          Never
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <ActionIcon variant="subtle" color="blue">
+                          <IconEye size={16} />
+                        </ActionIcon>
+                        <ActionIcon variant="subtle" color="gray">
+                          <IconEdit size={16} />
+                        </ActionIcon>
+                        <ActionIcon variant="subtle" color="red" onClick={() => handleDeleteAccount(account.id)}>
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))
+              )}
             </Table.Tbody>
           </Table>
 
