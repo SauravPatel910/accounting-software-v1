@@ -89,6 +89,53 @@ export interface Database {
           updated_at?: string;
         };
       };
+      bank_accounts: {
+        Row: {
+          id: string;
+          name: string;
+          accountNumber: string;
+          accountType: "checking" | "savings" | "credit" | "cash" | "investment";
+          bankName: string;
+          balance: number;
+          currency: string;
+          isActive: boolean;
+          lastSyncDate?: string;
+          description?: string;
+          company_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          accountNumber: string;
+          accountType: "checking" | "savings" | "credit" | "cash" | "investment";
+          bankName: string;
+          balance?: number;
+          currency?: string;
+          isActive?: boolean;
+          lastSyncDate?: string;
+          description?: string;
+          company_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          accountNumber?: string;
+          accountType?: "checking" | "savings" | "credit" | "cash" | "investment";
+          bankName?: string;
+          balance?: number;
+          currency?: string;
+          isActive?: boolean;
+          lastSyncDate?: string;
+          description?: string;
+          company_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       // Add more table types as needed
     };
   };
