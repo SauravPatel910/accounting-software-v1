@@ -411,9 +411,7 @@ export const customerApi = {
 
   // Search customers
   search: async (query: string): Promise<Customer[]> => {
-    const response = await apiClient.get<Customer[]>(
-      `/customers/search?q=${encodeURIComponent(query)}`
-    );
+    const response = await apiClient.get<Customer[]>(`/customers/search?q=${encodeURIComponent(query)}`);
     return response.data;
   },
 };
@@ -451,17 +449,13 @@ export const productApi = {
 
   // Search products
   search: async (query: string): Promise<Product[]> => {
-    const response = await apiClient.get<Product[]>(
-      `/products/search?q=${encodeURIComponent(query)}`
-    );
+    const response = await apiClient.get<Product[]>(`/products/search?q=${encodeURIComponent(query)}`);
     return response.data;
   },
 
   // Get products by category
   getByCategory: async (category: string): Promise<Product[]> => {
-    const response = await apiClient.get<Product[]>(
-      `/products/category/${encodeURIComponent(category)}`
-    );
+    const response = await apiClient.get<Product[]>(`/products/category/${encodeURIComponent(category)}`);
     return response.data;
   },
 
@@ -662,9 +656,7 @@ export const vendorApi = {
 
   // Search vendors
   search: async (query: string): Promise<Vendor[]> => {
-    const response = await apiClient.get<Vendor[]>(
-      `/vendors/search?q=${encodeURIComponent(query)}`
-    );
+    const response = await apiClient.get<Vendor[]>(`/vendors/search?q=${encodeURIComponent(query)}`);
     return response.data;
   },
 };
@@ -762,9 +754,7 @@ export const expenseApi = {
 
   // Get expenses by category
   getByCategory: async (category: string): Promise<Expense[]> => {
-    const response = await apiClient.get<Expense[]>(
-      `/expenses/category/${encodeURIComponent(category)}`
-    );
+    const response = await apiClient.get<Expense[]>(`/expenses/category/${encodeURIComponent(category)}`);
     return response.data;
   },
 
@@ -779,15 +769,11 @@ export const expenseApi = {
     const formData = new FormData();
     formData.append("receipt", file);
 
-    const response = await apiClient.post<{ url: string }>(
-      `/expenses/${expenseId}/receipt`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const response = await apiClient.post<{ url: string }>(`/expenses/${expenseId}/receipt`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data.url;
   },
 };
@@ -807,10 +793,7 @@ export const expenseCategoryApi = {
   },
 
   // Update category
-  update: async (
-    id: string,
-    data: Partial<CreateExpenseCategoryData>
-  ): Promise<ExpenseCategory> => {
+  update: async (id: string, data: Partial<CreateExpenseCategoryData>): Promise<ExpenseCategory> => {
     const response = await apiClient.put<ExpenseCategory>(`/expense-categories/${id}`, data);
     return response.data;
   },
@@ -818,6 +801,83 @@ export const expenseCategoryApi = {
   // Delete category
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/expense-categories/${id}`);
+  },
+};
+
+// prettier-ignore
+import { type AccountHierarchyDto, type AccountResponseDto, type CreateAccountDto, type UpdateAccountDto, type AccountQueryDto, type AccountListResponseDto, type GenerateAccountCodeDto, type AccountCodeResponseDto } from "../types/accounts";
+
+// Accounts API
+export const accountsApi = {
+  // Get all accounts
+  getAll: async (query?: AccountQueryDto): Promise<AccountListResponseDto> => {
+    const params = new URLSearchParams();
+    if (query) {
+      Object.entries(query).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const queryString = params.toString();
+    const endpoint = queryString ? `/accounts?${queryString}` : "/accounts";
+    const response = await apiClient.get<AccountListResponseDto>(endpoint);
+    return response.data;
+  },
+
+  // Get account by ID
+  getById: async (id: string, includeBalance?: boolean, balanceAsOfDate?: string): Promise<AccountResponseDto> => {
+    const params = new URLSearchParams();
+    if (includeBalance !== undefined) params.append("includeBalance", String(includeBalance));
+    if (balanceAsOfDate) params.append("balanceAsOfDate", balanceAsOfDate);
+    const queryString = params.toString();
+    const endpoint = queryString ? `/accounts/${id}?${queryString}` : `/accounts/${id}`;
+    const response = await apiClient.get<AccountResponseDto>(endpoint);
+    return response.data;
+  },
+
+  // Create new account
+  create: async (data: CreateAccountDto): Promise<AccountResponseDto> => {
+    const response = await apiClient.post<AccountResponseDto>("/accounts", data);
+    return response.data;
+  },
+
+  // Update account
+  update: async (id: string, data: UpdateAccountDto): Promise<AccountResponseDto> => {
+    const response = await apiClient.patch<AccountResponseDto>(`/accounts/${id}`, data);
+    return response.data;
+  },
+
+  // Delete account
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/accounts/${id}`);
+  },
+
+  // Get account hierarchy
+  getHierarchy: async (includeBalance?: boolean, balanceAsOfDate?: string): Promise<AccountHierarchyDto[]> => {
+    const params = new URLSearchParams();
+    if (includeBalance !== undefined) params.append("includeBalance", String(includeBalance));
+    if (balanceAsOfDate) params.append("balanceAsOfDate", balanceAsOfDate);
+    const queryString = params.toString();
+    const endpoint = queryString ? `/accounts/hierarchy?${queryString}` : "/accounts/hierarchy";
+    const response = await apiClient.get<AccountHierarchyDto[]>(endpoint);
+    return response.data;
+  },
+
+  // Generate account code
+  generateCode: async (data: GenerateAccountCodeDto): Promise<AccountCodeResponseDto> => {
+    const response = await apiClient.post<AccountCodeResponseDto>("/accounts/generate-code", data);
+    return response.data;
+  },
+
+  // Get account balance
+  getBalance: async (id: string, asOfDate?: string) => {
+    const params = new URLSearchParams();
+    if (asOfDate) params.append("asOfDate", asOfDate);
+    const queryString = params.toString();
+    const endpoint = queryString ? `/accounts/${id}/balance?${queryString}` : `/accounts/${id}/balance`;
+    const response = await apiClient.get(endpoint);
+    return response.data;
   },
 };
 

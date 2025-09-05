@@ -1,20 +1,15 @@
 import { createContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import type { User, Session, AuthError } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabase";
+import { authApi, type User } from "../services/api";
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  session: { token: string } | null;
   loading: boolean;
-  signUp: (
-    email: string,
-    password: string,
-    options?: { data?: Record<string, unknown> }
-  ) => Promise<{ error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signOut: () => Promise<{ error: AuthError | null }>;
-  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, name?: string, company?: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,58 +22,77 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<{ token: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Check if user is already logged in
+    const token = localStorage.getItem("auth-token");
+    if (token) {
+      // Try to get current user info
+      authApi
+        .getCurrentUser()
+        .then((userData) => {
+          setUser(userData);
+          setSession({ token });
+        })
+        .catch(() => {
+          // Token is invalid, remove it
+          localStorage.removeItem("auth-token");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
       setLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
   }, []);
 
-  const signUp = async (
-    email: string,
-    password: string,
-    options?: { data?: Record<string, unknown> }
-  ) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options,
-    });
-    return { error };
+  const signUp = async (email: string, password: string, name?: string, company?: string) => {
+    try {
+      const response = await authApi.register({
+        name: name || email.split("@")[0],
+        email,
+        password,
+        company,
+      });
+
+      setUser(response.user);
+      setSession({ token: response.token });
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const response = await authApi.login(email, password);
+
+      setUser(response.user);
+      setSession({ token: response.token });
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      await authApi.logout();
+      setUser(null);
+      setSession(null);
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
   };
 
-  const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    return { error };
+  const resetPassword = async () => {
+    // TODO: Implement password reset
+    return { error: new Error("Password reset not implemented yet") };
   };
 
   const value = {

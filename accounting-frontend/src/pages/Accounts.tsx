@@ -1,8 +1,17 @@
 import { Box, Text, Card, SimpleGrid, Button, Group, Tabs } from "@mantine/core";
 import { IconCalculator, IconPlus, IconList, IconBuildingBank } from "@tabler/icons-react";
+import { useState } from "react";
 import { BankAccountList } from "../components/banking";
+import { AddAccountModal, AccountList } from "../components/accounts";
 
 export function Accounts() {
+  const [addAccountModalOpened, setAddAccountModalOpened] = useState(false);
+
+  const handleAddAccountSuccess = () => {
+    // Refresh the accounts list or show success message
+    console.log("Account added successfully");
+  };
+
   return (
     <Box>
       <Group justify="space-between" mb="xl">
@@ -14,7 +23,9 @@ export function Accounts() {
             Manage your accounting structure and account categories
           </Text>
         </Box>
-        <Button leftSection={<IconPlus size={16} />}>Add Account</Button>
+        <Button leftSection={<IconPlus size={16} />} onClick={() => setAddAccountModalOpened(true)}>
+          Add Account
+        </Button>
       </Group>
 
       <Tabs defaultValue="bank-accounts">
@@ -35,52 +46,7 @@ export function Accounts() {
         </Tabs.Panel>
 
         <Tabs.Panel value="chart-accounts" pt="xl">
-          <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-            <Card shadow="xs" padding="lg" radius="md" withBorder>
-              <Group gap="sm" mb="md">
-                <IconList size={20} color="var(--mantine-color-blue-6)" />
-                <Text size="lg" fw={600}>
-                  All Accounts
-                </Text>
-              </Group>
-              <Text size="sm" c="dimmed" mb="md">
-                View and manage your complete chart of accounts
-              </Text>
-              <Button variant="light" fullWidth>
-                Coming Soon
-              </Button>
-            </Card>
-
-            <Card shadow="xs" padding="lg" radius="md" withBorder>
-              <Group gap="sm" mb="md">
-                <IconPlus size={20} color="var(--mantine-color-green-6)" />
-                <Text size="lg" fw={600}>
-                  Add Account
-                </Text>
-              </Group>
-              <Text size="sm" c="dimmed" mb="md">
-                Create new accounts for your business structure
-              </Text>
-              <Button variant="light" fullWidth>
-                Coming Soon
-              </Button>
-            </Card>
-
-            <Card shadow="xs" padding="lg" radius="md" withBorder>
-              <Group gap="sm" mb="md">
-                <IconCalculator size={20} color="var(--mantine-color-orange-6)" />
-                <Text size="lg" fw={600}>
-                  Account Categories
-                </Text>
-              </Group>
-              <Text size="sm" c="dimmed" mb="md">
-                Manage account categories and classifications
-              </Text>
-              <Button variant="light" fullWidth>
-                Coming Soon
-              </Button>
-            </Card>
-          </SimpleGrid>
+          <AccountList />
         </Tabs.Panel>
 
         <Tabs.Panel value="account-types" pt="xl">
@@ -132,6 +98,12 @@ export function Accounts() {
           </SimpleGrid>
         </Tabs.Panel>
       </Tabs>
+
+      <AddAccountModal
+        opened={addAccountModalOpened}
+        onClose={() => setAddAccountModalOpened(false)}
+        onSuccess={handleAddAccountSuccess}
+      />
     </Box>
   );
 }

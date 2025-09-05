@@ -47,13 +47,9 @@ export function RegisterForm({ onToggleForm }: RegisterFormProps) {
     setLoading(true);
     setError(null);
 
-    const { error } = await signUp(values.email, values.password, {
-      data: {
-        first_name: values.firstName,
-        last_name: values.lastName,
-        company_name: values.companyName,
-      },
-    });
+    const fullName = `${values.firstName} ${values.lastName}`.trim();
+
+    const { error } = await signUp(values.email, values.password, fullName, values.companyName);
 
     if (error) {
       setError(error.message);
